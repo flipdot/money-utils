@@ -10,22 +10,43 @@ from datetime import date, timedelta
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("fints.dialog").setLevel(logging.WARN)
 
-if __name__ == "__main__":
+pin = None
+conn = None
+accounts = None
 
-    pin = getpass.getpass("Please enter PIN: ")
+def get_connection():
+    global pin, conn
+    if conn:
+        try:
+            conn.get_sepa_accounts()
+            return conn
+        except:
+            conn = None
 
-    f = FinTS3PinTanClient(
+    if not pin:
+        pin = getpass.getpass("Please enter PIN: ")
+    conn = FinTS3PinTanClient(
         config.blz,
         config.user,
         pin,
         config.fints_url
     )
+    return conn
 
-    accounts = f.get_sepa_accounts()
-    logging.info(pformat(accounts))
+def get_account():
+    global accounts
+    if not accounts:
+        conn = get_connection()
+        accounts = conn.get_sepa_accounts()
+    for acc in accounts:
+        if acc.iban == config.iban:
+            return acc
+    raise Exception("IBAN %s not found (got %s)", config.iban, pformat(accounts))
 
-    statement = f.get_statement(accounts[0], date.today() - timedelta(days=30), date.today())
+if __name__ == "__main__":
+    account = get_account()
+    statement = conn.get_statement(account, date.today() - timedelta(days=30), date.today())
 
-    for transaction in statement:
-        logging.info(pformat(transaction))
-        logging.info(pformat(transaction.data))
+    for tx in statement:
+        logging.info(pformat(tx.data))
+        #logging.info("%s %s %s", tx.data['entry_date'], pformat(tx.data['amount']), tx.data['purpose'])
