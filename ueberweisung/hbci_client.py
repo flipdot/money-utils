@@ -40,6 +40,7 @@ def get_account():
         accounts = conn.get_sepa_accounts()
     for acc in accounts:
         if acc.iban == config.iban:
+            logging.info("Got account %s.", pformat(acc))
             return acc
     raise Exception("IBAN %s not found (got %s)", config.iban, pformat(accounts))
 
