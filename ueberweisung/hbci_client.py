@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 import getpass
 import logging
+from datetime import date, timedelta
 from pprint import pformat
 
 from fints.client import FinTS3PinTanClient
+
 import config
-from datetime import date, timedelta
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("fints.dialog").setLevel(logging.WARN)

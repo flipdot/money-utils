@@ -1,24 +1,22 @@
 #!/usr/bin/python3
 import logging
+import os
 import pickle
-from collections import namedtuple
-from datetime import timedelta, date, datetime
 import re
+from datetime import timedelta, date, datetime
+from hashlib import sha256
 from pprint import pprint, pformat
 
-import os
-
+import config
 import hbci_client as hbci
-from hashlib import sha256
 
 load_back_initial = timedelta(days=365 * 2)
 load_back_incremental = timedelta(days=7)
-load_interval_max = timedelta(minutes=5)
+load_interval_max = timedelta(minutes=config.load_interval_minutes)
 
 drinks_regex = re.compile(r'^drinks?\s+(?P<uid>\d+)\s+(?P<info>.*)$', re.I)
 #drinks_regex = re.compile(r'^MIETE?\s+(?P<info>.*)\s+(?P<uid>\d+)$', re.I)
 
-Recharge = namedtuple("Recharge", ["uid", "info", "amount", "date"])
 save_path = "cache.bin"
 
 logging.basicConfig(level=logging.INFO)
@@ -116,13 +114,18 @@ def load_recharges():
             recharges_by_uid[uid] = []
         info = match.group("info")
         info = re.sub(r'[^\w \-_.,;:]', '_', info)
-        r = Recharge(uid, info, amount, tx_date)
+        r = {'uid': uid, 'info': info, 'amount': amount, 'date': tx_date}
         recharges_by_uid[uid].append(r)
     # sort all
     for uid in recharges_by_uid:
-        recharges_by_uid[uid] = sorted(recharges_by_uid[uid], key=lambda r: r.date)
+        recharges_by_uid[uid] = sorted(recharges_by_uid[uid], key=lambda r: r['date'])
     return recharges_by_uid
 
 if __name__ == "__main__":
     charges = load_recharges()
     pprint(charges)
+
+    txs = load_txs()
+    txs = txs.values()
+    txs = sorted(txs, key=lambda t: t.data['date'])
+    pprint([t.data for t in txs[10:]])
