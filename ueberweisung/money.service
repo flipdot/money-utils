@@ -1,0 +1,10 @@
+[Unit]
+
+[Service]
+Environment=PYTHONUNBUFFERED=1
+WorkingDirectory=%h/vcs/flipdot/money-utils/ueberweisung/
+ExecStart=%h/vcs/flipdot/money-utils/ueberweisung/webserver.py
+RestartSec=3
+
+[Install]
+WantedBy=default.target

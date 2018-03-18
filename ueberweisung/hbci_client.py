@@ -25,6 +25,8 @@ def get_connection():
             conn = None
 
     if not pin:
+        pin = config.pin
+    if not pin:
         pin = getpass.getpass("Please enter PIN: ")
     conn = FinTS3PinTanClient(
         config.blz,
