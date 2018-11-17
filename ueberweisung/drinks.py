@@ -7,8 +7,11 @@ from datetime import timedelta, date, datetime
 from hashlib import sha256
 from pprint import pprint, pformat
 
+from mt940.models import Date
+
 import config
 import hbci_client as hbci
+from cache import load_cache, save_cache
 
 load_back_initial = timedelta(days=365 * 2)
 load_back_incremental = timedelta(days=7)
@@ -17,11 +20,8 @@ load_interval_max = timedelta(minutes=config.load_interval_minutes)
 drinks_regex = re.compile(r'^drinks?\s+(?P<uid>\d+)\s+(?P<info>.*)$', re.I)
 #drinks_regex = re.compile(r'^MIETE?\s+(?P<info>.*)\s+(?P<uid>\d+)$', re.I)
 
-save_path = "cache.bin"
 
 logging.basicConfig(level=logging.INFO)
-
-cache = None
 
 def tx_id(tx):
     # hash together as much as possible
@@ -42,20 +42,8 @@ def tx_id(tx):
     sha = sha256(raw.encode("UTF8"))
     return sha.hexdigest()
 
-def load_cache():
-    global cache
-    if os.path.exists(save_path):
-        with open(save_path, "rb") as fd:
-            cache = pickle.load(fd, encoding="UTF8")
-            logging.info("Loaded %d txs from cache.", len(cache['txs']))
-    else:
-        cache = {'txs': {}}
-    return cache
-
 def load_txs():
-    global cache
-    if not cache:
-        load_cache()
+    cache = load_cache()
 
     if 'last_load' in cache:
         logging.info("Last load was at %s", cache['last_load'])
@@ -69,7 +57,7 @@ def load_txs():
 
     logging.info("Latest tx cached from %s", last_tx_date)
     load_back = load_back_initial
-    if last_tx_date:
+    if date.today() - last_tx_date < load_back_incremental:
         load_back = load_back_incremental
     now = date.today()
     back = now - load_back
@@ -92,8 +80,7 @@ def load_txs():
             shas_this[sha] = tx
     logging.info("Fetched %d new txs. Got %d total.", new, len(cache['txs']))
     cache['last_load'] = datetime.utcnow()
-    with open(save_path, "wb") as fd:
-        pickle.dump(cache, fd)
+    save_cache()
     return cache['txs']
 
 def load_recharges():
@@ -128,4 +115,4 @@ if __name__ == "__main__":
     txs = load_txs()
     txs = txs.values()
     txs = sorted(txs, key=lambda t: t.data['date'])
-    pprint([t.data for t in txs[10:]])
+    #pprint([t.data for t in txs[10:]])
