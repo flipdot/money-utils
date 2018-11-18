@@ -13,7 +13,7 @@ import config
 import hbci_client as hbci
 from cache import load_cache, save_cache
 
-load_back_initial = timedelta(days=365 * 2)
+load_back_initial = timedelta(days=365 * 1)
 load_back_incremental = timedelta(days=7)
 load_interval_max = timedelta(minutes=config.load_interval_minutes)
 

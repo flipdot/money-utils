@@ -5,6 +5,7 @@ fints_url = "http://FILL_ME"
 
 blz = "BLZ"
 user = "USERNAME"
+pin = "" # leave empty to ask
 iban = "DE0000000000000"
 
 load_interval_minutes = 60
