@@ -1,17 +1,45 @@
+from contextlib import contextmanager
+
+import dataset
 import sqlalchemy
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, sessionmaker
 
 import config
-import dataset
+
+Base = declarative_base()
 
 table_tx = 'transaction'
 table_member = 'member'
 
 conn = None
+session_maker: sessionmaker = None
+
+
+@contextmanager
+def tx() -> Session:
+    """Provide a transactional scope around a series of operations."""
+    session = session_maker()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 def get():
-    global conn
+    global conn, session_maker
     if conn: return conn
     conn = dataset.connect('sqlite:///%s' % config.db_path)
+    session_maker = sessionmaker(bind=conn.engine)
+
+    with tx() as session:
+        import transaction
+        import member
+        Base.metadata.create_all(conn.engine)
+
     return conn
 
 def table(which: str) -> dataset.Table:
