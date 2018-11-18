@@ -61,12 +61,12 @@ def txs_by_member(session: Session, member: Member) -> Query:
 
     return session.query(Transaction)\
         .filter(or_(*or_items))\
-        .filter(not_(Transaction.purpose.ilike("%spende"))) \
-        .filter(not_(Transaction.purpose.ilike("%spende %"))) \
-        .filter(not_(Transaction.purpose.ilike("spende %"))) \
-        .filter(not_(Transaction.purpose.ilike("spende"))) \
+        .filter(Transaction.purpose.notilike("%spende")) \
+        .filter(Transaction.purpose.notilike("%spende %")) \
+        .filter(Transaction.purpose.notilike("spende %")) \
+        .filter(Transaction.purpose.notilike("spende")) \
+        .filter(Transaction.purpose.notilike("drinks %")) \
         .filter(Transaction.amount > 0)\
-        .filter(not_(Transaction.purpose.ilike("drinks %")))
     #TODO detect double-linking
 
 
@@ -79,21 +79,23 @@ def analyze_member(member, session):
         (" last amount %.2f" % member.last_fee if member.last_fee else ""))
 
     last_paid = None
+    last_month_missing = False
     for first_last in months(from_date, today):
         first_day, next_month = first_last
         month = first_day.strftime("%Y-%m")
 
         #logging.debug("  %s", first_day)
-        txs: Iterable[Transaction] = txs_by_member(session, member)\
+        txs: list[Transaction] = txs_by_member(session, member)\
             .filter(Transaction.date >= first_day)\
             .filter(Transaction.date < next_month)\
             .order_by(Transaction.date)
 
         month_sum = sum([tx.amount for tx in txs])
 
-        if month_sum == 0 and last_paid + timedelta(days=30) > first_day:
-            logging.warning("  No payment in %s" % first_day.strftime("%Y-%m"))
-
+        if month_sum == 0:
+            if not last_month_missing:
+                logging.warning("  No payment in %s" % first_day.strftime("%Y-%m"))
+            last_month_missing = True
         elif member.last_fee is None or member.last_fee != month_sum:
             [logging.debug("    %s: % 20s | % .2f - %.50s",
                 tx.date, tx.applicant_name, tx.amount, tx.purpose) for tx in txs]
@@ -101,10 +103,12 @@ def analyze_member(member, session):
                 month,
                 " changed from %.2f to" % member.last_fee if member.last_fee else "",
                 month_sum)
-            member.last_fee = month_sum
-            session.add(member)
+            if month_sum != 0:
+                member.last_fee = month_sum
+                session.add(member)
 
         if month_sum > 0:
+            last_month_missing = False
             last_paid = txs[-1].date
 
     if last_paid + timedelta(days=31) < today:
