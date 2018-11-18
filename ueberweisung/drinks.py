@@ -57,7 +57,7 @@ def load_txs():
 
     logging.info("Latest tx cached from %s", last_tx_date)
     load_back = load_back_initial
-    if date.today() - last_tx_date < load_back_incremental:
+    if last_tx_date and date.today() - last_tx_date < load_back_incremental:
         load_back = load_back_incremental
     now = date.today()
     back = now - load_back

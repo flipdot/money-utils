@@ -1,4 +1,5 @@
 from _sha256 import sha256
+from datetime import date, datetime
 
 
 class ImmutableException(BaseException):
@@ -39,7 +40,6 @@ class Transaction:
             str(self.data['id']),
             str(self.data['status']),
             str(self.data['prima_nota']),
-            str(self.data['posting_text']),
             str(self.data['purpose']),
         ])
         sha = sha256(raw.encode("UTF8"))
