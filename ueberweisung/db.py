@@ -4,6 +4,7 @@ import config
 import dataset
 
 table_tx = 'transaction'
+table_member = 'member'
 
 conn = None
 

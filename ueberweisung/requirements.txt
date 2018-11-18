@@ -2,3 +2,4 @@ fints
 flask
 flask_compress
 dataset
+python-dateutil
