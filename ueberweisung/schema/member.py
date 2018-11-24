@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 
-Base = declarative_base()
+from db import Base
 
 class Member(Base):
     __tablename__ = 'member'

@@ -3,7 +3,7 @@ from contextlib import contextmanager
 import dataset
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker, scoped_session
 
 import config
 
@@ -30,14 +30,16 @@ def tx() -> Session:
         session.close()
 
 def get():
-    global conn, session_maker
+    global conn, session_maker, base
     if conn: return conn
     conn = dataset.connect('sqlite:///%s' % config.db_path)
-    session_maker = sessionmaker(bind=conn.engine)
+    session_maker = scoped_session(sessionmaker(autocommit=False,
+            autoflush=False,
+            bind=conn.engine))
+    Base.query = session_maker.query_property()
 
     with tx() as session:
-        import transaction
-        import member
+        import schema
         Base.metadata.create_all(conn.engine)
 
     return conn

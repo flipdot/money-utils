@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
+# coding: utf8
 
 import logging
-import re
 import sys
 from datetime import date, timedelta
-from typing import Iterable
+from sqlalchemy import or_
 
-from dateutil.relativedelta import relativedelta
-from sqlalchemy import or_, not_
 from sqlalchemy.orm import Query
 from sqlalchemy.orm.session import Session
 
 import db
-from member import Member
-from transaction import Transaction
+import util
+from schema.member import Member
+from schema.transaction import Transaction
 
 logging.basicConfig(level=logging.INFO, format="%(levelname) 7s %(message)s")
 
@@ -80,7 +79,7 @@ def analyze_member(member, session):
 
     last_paid = None
     last_month_missing = False
-    for first_last in months(from_date, today):
+    for first_last in util.months(from_date, today):
         first_day, next_month = first_last
         month = first_day.strftime("%Y-%m")
 
@@ -128,16 +127,6 @@ def find_first_date(member, session: Session):
     member.entry_date = first_tx.date
     session.add(member)
     return first_tx.date
-
-
-def months(from_date, to_date):
-    from_month = from_date.replace(day=1)
-    to_month = to_date.replace(day=1)
-
-    while from_month <= to_month:
-        next = from_month + relativedelta(months=+1)
-        yield from_month, next
-        from_month = next
 
 
 if __name__ == "__main__":

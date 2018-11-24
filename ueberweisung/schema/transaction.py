@@ -2,10 +2,10 @@ from _sha256 import sha256
 
 from sqlalchemy import Column, String, Numeric, Date
 
-import db
+from db import Base
 
 
-class Transaction(db.Base):
+class Transaction(Base):
     __tablename__ = 'transaction'
 
     _tx_id = Column(String, primary_key=True)

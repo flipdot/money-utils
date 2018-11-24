@@ -5,7 +5,7 @@ import sys
 
 import db as database
 import cache
-from transaction import Transaction
+from schema.transaction import Transaction
 
 logging.basicConfig(level=logging.INFO)
 
