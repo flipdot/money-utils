@@ -1,7 +1,10 @@
+import logging
 from contextlib import contextmanager
+from typing import Generator, Iterator
 
 import dataset
 import sqlalchemy
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker, scoped_session
 
@@ -17,7 +20,7 @@ session_maker: sessionmaker = None
 
 
 @contextmanager
-def tx() -> Session:
+def tx() -> Iterator[Session]:
     """Provide a transactional scope around a series of operations."""
     session = session_maker()
     try:
@@ -29,29 +32,21 @@ def tx() -> Session:
     finally:
         session.close()
 
-def get():
+
+def init(debug=False):
     global conn, session_maker, base
     if conn: return conn
-    conn = dataset.connect('sqlite:///%s' % config.db_path)
+    conn = create_engine('sqlite:///%s' % config.db_path)
     session_maker = scoped_session(sessionmaker(autocommit=False,
             autoflush=False,
-            bind=conn.engine))
+            bind=conn))
     Base.query = session_maker.query_property()
+
+    if debug:
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     with tx() as session:
         import schema
         Base.metadata.create_all(conn.engine)
 
     return conn
-
-def table(which: str) -> dataset.Table:
-    db = get()
-    pkey = None, None
-    if which == table_tx:
-        pkey = "_tx_id", db.types.string
-    table = db.create_table(which, primary_id=pkey[0], primary_type=pkey[1])
-
-    if which == table_tx:
-        table.create_column('amount', sqlalchemy.Numeric)
-
-    return table

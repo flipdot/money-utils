@@ -64,7 +64,7 @@ def load_txs():
     logging.info("Loading from %s to %s", back, now)
     acc = hbci.get_account()
     conn = hbci.get_connection()
-    txs = conn.get_statement(acc, back, now)
+    txs = conn.get_transactions(acc, back, now)
     new = 0
     shas_this = {}
     for tx in txs:

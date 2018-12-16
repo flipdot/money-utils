@@ -10,16 +10,15 @@ from schema.transaction import Transaction
 logging.basicConfig(level=logging.INFO)
 
 def main(args):
-    db = database.get().engine
+    db = database.init()
     cached = cache.load_cache()
     txs_cache = cached['txs']
-    txs_db = database.table(database.table_tx)
-
-    logging.info("loaded %d tx from cache, %d in db",
-        len(txs_cache), txs_db.count())
 
     count = 0
     with database.tx() as session:
+        logging.info("loaded %d tx from cache, %d in db",
+            len(txs_cache), session.query(Transaction).count())
+
         for sha, cached_tx in txs_cache.items():
             if not session.query(Transaction).filter_by(_tx_id=sha).first():
                 count += 1

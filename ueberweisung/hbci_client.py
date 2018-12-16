@@ -16,6 +16,10 @@ conn = None
 accounts = None
 
 def get_connection():
+    logging.getLogger('fints').setLevel(logging.INFO)
+    logging.getLogger('urllib3.connectionpool').setLevel(logging.INFO)
+    logging.getLogger('mt940.tags').setLevel(logging.INFO)
+
     global pin, conn
     if conn:
         try:
@@ -49,7 +53,7 @@ def get_account():
 
 if __name__ == "__main__":
     account = get_account()
-    statement = conn.get_statement(account, date.today() - timedelta(days=30), date.today())
+    statement = conn.get_transactions(account, date.today() - timedelta(days=30), date.today())
 
     for tx in statement:
         logging.info(pformat(tx.data))

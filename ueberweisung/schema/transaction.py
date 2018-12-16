@@ -1,9 +1,67 @@
+import logging
 from _sha256 import sha256
+from datetime import datetime
 
-from sqlalchemy import Column, String, Numeric, Date
+from sqlalchemy import Column, String, Numeric, Date, DateTime
 
+import config
 from db import Base
 
+
+copy_fields = [
+    'original_amount',
+    'date',
+    'entry_date',
+    'purpose',
+    'applicant_bin',
+    'applicant_name',
+    'applicant_iban',
+    'currency',
+    'extra_details',
+    'customer_reference',
+    'bank_reference',
+    'id',
+    'status',
+    'funds_code',
+    'transaction_code',
+    'posting_text',
+    'prima_nota',
+    'return_debit_notes',
+    'recipient_name',
+    'additional_purpose',
+    'gvc_applicant_iban',
+    'gvc_applicant_bin',
+    'end_to_end_reference',
+    'additional_position_reference',
+    'applicant_creditor_id',
+    'purpose_code',
+    'additional_position_date',
+    'deviate_applicant',
+    'deviate_recipient',
+    'old_SEPA_CI',
+    'old_SEPA_additional_position_reference',
+    'settlement_tag',
+    'debitor_identifier',
+    'compensation_amount',
+]
+
+optional_fields = [
+    'original_amount',
+    'gvc_applicant_iban',
+    'gvc_applicant_bin',
+    'end_to_end_reference',
+    'additional_position_reference',
+    'additional_position_date',
+    'applicant_creditor_id',
+    'purpose_code',
+    'deviate_applicant',
+    'deviate_recipient',
+    'old_SEPA_CI',
+    'old_SEPA_additional_position_reference',
+    'settlement_tag',
+    'debitor_identifier',
+    'compensation_amount',
+]
 
 class Transaction(Base):
     __tablename__ = 'transaction'
@@ -15,6 +73,8 @@ class Transaction(Base):
     date = Column(Date())
     entry_date = Column(Date())
     purpose = Column(String(), nullable=False)
+
+    import_date = Column(DateTime(), default=datetime.utcnow(), nullable=False)
 
     applicant_bin = Column(String()) # BIC
     applicant_name = Column(String())
@@ -44,7 +104,6 @@ class Transaction(Base):
     additional_position_date = Column(String())
     deviate_applicant = Column(String())
     deviate_recipient = Column(String())
-    FRST_ONE_OFF_RECC = Column(String())
     old_SEPA_CI = Column(String())
     old_SEPA_additional_position_reference = Column(String())
     settlement_tag = Column(String())
@@ -52,10 +111,22 @@ class Transaction(Base):
     compensation_amount = Column(String())
 
     def __init__(self, hbci_tx):
-        #TODO
-        self.data = hbci_tx.data
-        self.data['_tx_id'] = self.tx_id()
-        self.data['amount'] = self.data['amount'].amount
+        data = hbci_tx.data
+        self.data = data
+        self.amount = data['amount'].amount
+
+        for key in copy_fields:
+            if config.debug:
+                if key not in data and key not in optional_fields:
+                    logging.error("Putting key %s in optional fields list", key)
+                    optional_fields.append(key)
+            if key not in optional_fields:
+                value = data[key]
+            else:
+                value = data[key] if key in data else None
+            self.__dict__[key] = value
+
+        self._tx_id = self.tx_id()
 
     def tx_id(self):
         # hash together as much as possible

@@ -9,6 +9,7 @@ from sqlalchemy import or_, desc
 from sqlalchemy.orm import Query
 from sqlalchemy.orm.session import Session
 
+import config
 import db
 import hbci_client
 import util
@@ -18,45 +19,49 @@ from schema.status import Status, LAST_LOAD
 from schema.transaction import Transaction
 
 MAX_LOAD_DAYS = 6 * 30
-LOAD_BACK_DAYS = 5
+# grace time of days to fetch extra
+LOAD_BACK_DAYS = 4
 
-logging.basicConfig(level=logging.INFO, format="%(levelname) 7s %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(levelname) 7s %(module)s - %(message)s")
 
 def main(args):
     if '--debug' in args:
+        config.debug = True
+    if config.debug:
         logging.getLogger('').setLevel(logging.DEBUG)
+    db.init(config.debug)
 
-    db.get()
-
-    get_transactions()
+    get_transactions(True)
 
 
-def get_transactions():
+def get_transactions(force=False):
     with db.tx() as session:
         last_load: Status = session.query(Status).filter_by(
-            key=LAST_LOAD).fetchone()
+            key=LAST_LOAD).first()
         if last_load:
             logging.info("Last load was at %s", last_load.value_dt)
-            if last_load.value_dt + load_interval_max > datetime.utcnow():
-                return _query_transactions(session)
+            if not force and last_load.value_dt + load_interval_max > datetime.utcnow():
+                logging.info("Quite recent, not loading new txs")
+                return
+        else:
+            last_load = Status(key=LAST_LOAD)
 
         logging.info("Loading fresh transactions")
-        load_transactions(session)
-    return _query_transactions(session)
+        load_transactions(session, last_load)
 
 def _query_transactions(session):
     return session.query(Transaction)
 
-def load_transactions(session):
+def load_transactions(session, last_load: Status):
 
     last_transaction: Transaction = _query_transactions(session)\
-        .order_by(desc(Transaction.date))\
-        .fetchone()
+        .order_by(desc(Transaction.entry_date))\
+        .first()
 
     utcnow = datetime.utcnow()
     now = utcnow.date()
     if last_transaction:
-        fetch_from = last_transaction.date - timedelta(days=LOAD_BACK_DAYS)
+        fetch_from = last_transaction.entry_date - timedelta(days=LOAD_BACK_DAYS)
     else:
         fetch_from = now - timedelta(days = 365*2)
 
@@ -65,19 +70,40 @@ def load_transactions(session):
         if fetch_to > now:
             fetch_to = now
 
-        load_chunk(session, fetch_from, fetch_to)
-
+        res = load_chunk(session, fetch_from, fetch_to)
+        if not res:
+            return
         if fetch_to >= now:
-         break
+            break
 
-    session.add(Status(key=LAST_LOAD, value_dt=utcnow))
+    last_load.value_dt = utcnow
+    session.add(last_load)
 
 
-def load_chunk(session: Session, fetch_from: datetime, fetch_to: datetime):
+def load_chunk(session: Session, fetch_from: date, fetch_to: date):
     acc = hbci_client.get_account()
     conn = hbci_client.get_connection()
-    txs = conn.get_statement(acc, fetch_from, fetch_to)
+    error = False
+    def log_callback(_, response):
+        if response.code[0] not in ('0', '1', '3'): # 0&1 info, 3 warning, rest err
+            error = True
+
+    conn.add_response_callback(log_callback)
+    txs = conn.get_transactions(acc, fetch_from, fetch_to)
 
     new_txs = [Transaction(tx) for tx in txs]
-    logging.info("Fetched %d new txs", len(new_txs))
-    session.add_all(new_txs)
+    logging.info("Fetched %d txs", len(new_txs))
+    if error:
+        logging.error("Errors occurred")
+        session.rollback()
+        return False
+
+    for tx in new_txs:
+       old_tx = session.query(Transaction).filter_by(_tx_id=tx._tx_id).first()
+       if old_tx:
+           old_tx.__dict__.update(tx.__dict__)
+       else:
+           session.add(tx)
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
