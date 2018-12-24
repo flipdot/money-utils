@@ -63,10 +63,14 @@ optional_fields = [
     'compensation_amount',
 ]
 
+empty_fields = [
+    'purpose',
+]
+
 class Transaction(Base):
     __tablename__ = 'transaction'
 
-    _tx_id = Column(String, primary_key=True)
+    tx_id = Column(String, primary_key=True)
 
     amount = Column(Numeric())
     original_amount = Column(Numeric())
@@ -126,9 +130,13 @@ class Transaction(Base):
                 value = data[key] if key in data else None
             self.__dict__[key] = value
 
-        self._tx_id = self.tx_id()
+        for key in empty_fields:
+            if self.__dict__[key] is None:
+                self.__dict__[key] = ''
 
-    def tx_id(self):
+        self.tx_id = self.gen_id()
+
+    def gen_id(self):
         # hash together as much as possible
         # there are NO unique transaction IDs in hbci...
         raw = "|".join([
@@ -145,3 +153,10 @@ class Transaction(Base):
         ])
         sha = sha256(raw.encode("UTF8"))
         return sha.hexdigest()
+
+    def __str__(self) -> str:
+        return str(self.__dict__)
+
+    def __repr__(self):
+        return self.__str__()
+

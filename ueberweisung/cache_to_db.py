@@ -20,7 +20,7 @@ def main(args):
             len(txs_cache), session.query(Transaction).count())
 
         for sha, cached_tx in txs_cache.items():
-            if not session.query(Transaction).filter_by(_tx_id=sha).first():
+            if not session.query(Transaction).filter_by(tx_id=sha).first():
                 count += 1
                 tx = Transaction(cached_tx)
                 session.add(tx)

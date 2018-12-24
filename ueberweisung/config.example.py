@@ -1,5 +1,7 @@
 
 # check https://www.hbci-zka.de/institute/institut_auswahl.htm
+# https://www.willuhn.de/wiki/doku.php?id=support:list:banken
+# https://www.homebanking-hilfe.de/forum/topic.php?t=1174
 # to find your url
 fints_url = "http://FILL_ME"
 
@@ -15,3 +17,5 @@ port = 5002
 flask_debug = True
 
 db_path = "money.sqlite"
+
+debug = False

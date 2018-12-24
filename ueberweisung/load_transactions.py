@@ -99,11 +99,7 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date):
         return False
 
     for tx in new_txs:
-       old_tx = session.query(Transaction).filter_by(_tx_id=tx._tx_id).first()
-       if old_tx:
-           old_tx.__dict__.update(tx.__dict__)
-       else:
-           session.add(tx)
+        session.merge(tx)
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
