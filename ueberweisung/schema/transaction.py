@@ -2,11 +2,11 @@ import logging
 from _sha256 import sha256
 from datetime import datetime
 
-from sqlalchemy import Column, String, Numeric, Date, DateTime
+from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey
 
 import config
 from db import Base
-
+from schema.member import Member
 
 copy_fields = [
     'original_amount',
@@ -71,6 +71,8 @@ class Transaction(Base):
     __tablename__ = 'transaction'
 
     tx_id = Column(String, primary_key=True)
+
+    member_id = Column(Integer, ForeignKey('member.id'), nullable=True)
 
     amount = Column(Numeric())
     original_amount = Column(Numeric())

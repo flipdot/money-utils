@@ -20,7 +20,7 @@ def main(args):
     if '--debug' in args:
         logging.getLogger('').setLevel(logging.DEBUG)
 
-    db.get()
+    db.init()
 
     with db.tx() as session:
         for member in session.query(Member)\
@@ -59,6 +59,7 @@ def txs_by_member(session: Session, member: Member) -> Query:
         ])
 
     return session.query(Transaction)\
+        .filter(or_(Transaction.member_id.is_(None), Transaction.member_id == member.id))\
         .filter(or_(*or_items))\
         .filter(Transaction.purpose.notilike("%spende")) \
         .filter(Transaction.purpose.notilike("%spende %")) \
@@ -66,19 +67,20 @@ def txs_by_member(session: Session, member: Member) -> Query:
         .filter(Transaction.purpose.notilike("spende")) \
         .filter(Transaction.purpose.notilike("drinks %")) \
         .filter(Transaction.amount > 0)\
-    #TODO detect double-linking
 
 
 def analyze_member(member, session):
     from_date = find_first_date(member, session)
     if not from_date:
         return
-    today = date.today()
+    today = date.today().replace(day=1)
+    today = today.replace(month=today.month-1)
     logging.info("Member %s," % member.name +
         (" last amount %.2f" % member.last_fee if member.last_fee else ""))
 
     last_paid = None
     last_month_missing = False
+    unchanged_months = 0
     for first_last in util.months(from_date, today):
         first_day, next_month = first_last
         month = first_day.strftime("%Y-%m")
@@ -91,13 +93,20 @@ def analyze_member(member, session):
 
         month_sum = sum([tx.amount for tx in txs])
 
+        for tx in txs:
+            tx.member_id = member.id
+            session.add(tx)
+
         if month_sum == 0:
+            unchanged_months = 0
             if not last_month_missing:
                 logging.warning("  No payment in %s" % first_day.strftime("%Y-%m"))
             last_month_missing = True
         elif member.last_fee is None or member.last_fee != month_sum:
             [logging.debug("    %s: % 20s | % .2f - %.50s",
                 tx.date, tx.applicant_name, tx.amount, tx.purpose) for tx in txs]
+            unchanged_months = 0
+
             logging.info("  %s - monthly amount%s EUR %.2f",
                 month,
                 " changed from %.2f to" % member.last_fee if member.last_fee else "",
@@ -105,14 +114,19 @@ def analyze_member(member, session):
             if month_sum != 0:
                 member.last_fee = month_sum
                 session.add(member)
+        else:
+            unchanged_months += 1
 
         if month_sum > 0:
             last_month_missing = False
             last_paid = txs[-1].date
 
-    if last_paid + timedelta(days=31) < today:
+    if last_paid and last_paid + timedelta(days=31) < today:
         logging.warning("  Last paid was %s, marking as exit", last_paid)
         member.exit_date = last_paid + timedelta(days=30)
+        session.add(member)
+    elif unchanged_months > 1:
+        member.fee = member.last_fee
         session.add(member)
 
 
