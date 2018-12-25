@@ -157,7 +157,8 @@ class Transaction(Base):
         return sha.hexdigest()
 
     def __str__(self) -> str:
-        return str(self.__dict__)
+        return "Tx[from: '{sender}', purpose: '{purpose}', amount: {amount:.2f}, date: {date}]"\
+            .format(sender=self.applicant_name, purpose=self.purpose, amount=self.amount, date=self.date)
 
     def __repr__(self):
         return self.__str__()

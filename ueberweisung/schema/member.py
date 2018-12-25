@@ -31,3 +31,9 @@ class Member(Base):
     @hybrid_property
     def name(self):
         return "%s %s (%s)" % (self.first_name, self.last_name, self.nick)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return "Member({name})".format(name=self.name)

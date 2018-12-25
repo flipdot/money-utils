@@ -3,3 +3,5 @@ flask
 flask_compress
 dataset
 python-dateutil
+fuzzywuzzy
+python-Levenshtein
