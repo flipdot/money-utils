@@ -19,3 +19,7 @@ flask_debug = True
 db_path = "money.sqlite"
 
 debug = False
+
+# number of days to shift month boundary
+# used to mark payments coming on the 29th for the next month
+crossover_days = 5

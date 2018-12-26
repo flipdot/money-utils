@@ -12,10 +12,11 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Query
 from sqlalchemy.orm.session import Session
 
+import config
 import db
 import util
 from schema.member import Member
-from schema.transaction import Transaction
+from schema.transaction import Transaction, TxType
 
 logging.basicConfig(level=logging.INFO, format="%(levelname) 7s %(message)s")
 
@@ -69,6 +70,7 @@ def txs_by_member(session: Session, member: Member) -> Query:
         .filter(Transaction.purpose.notilike("spende %")) \
         .filter(Transaction.purpose.notilike("spende")) \
         .filter(Transaction.purpose.notilike("drinks %")) \
+        .filter(or_(Transaction.type == TxType.MEMBER_FEE, Transaction.type.is_(None)))\
         .filter(Transaction.amount > 0)
 
 
@@ -83,14 +85,13 @@ def choose_member(tx: Transaction, members: List[Member]):
             fuzz.token_set_ratio(member_tokens, tx.purpose)
         scores[member] = score
 
+    choice: Tuple[Member, int] = scores.most_common(1)[0]
+    selected = choice[0]
     logging.info("  %s matches:", tx)
     for member, count in scores.items():
-        logging.info("    %d %s", count, member)
+        logging.info("%s%d %s", " -->" if selected == member else "    ", count, member)
 
-    choice: Tuple[Member, int] = scores.most_common(1)[0]
-    logging.info("  Using %s", choice)
-
-    return choice[0]
+    return selected
 
 
 def link_transactions(session, members):
@@ -112,9 +113,21 @@ def link_transactions(session, members):
         else:
             member = choose_member(tx, members)
             tx.member_id = member.id
+        tx.type = TxType.MEMBER_FEE
         session.add(tx)
 
     logging.info("%d new links", len(member_tx_set))
+
+
+def member_txs_additional(session, member, txs: List[Transaction]):
+    """Detect some types of project expenses"""
+    fee_txs = list(filter(lambda t: t.amount == member.last_fee, txs))
+    nonfee_txs = list(filter(lambda t: t not in fee_txs, txs))
+    if len(fee_txs) == 1 and len(nonfee_txs) > 0:
+        for tx in nonfee_txs:
+            logging.info("Marking as project expense: %s", tx)
+            tx.type = TxType.PROJECT_EXPENSE
+        session.add_all(nonfee_txs)
 
 
 def analyze_member(member, session):
@@ -123,19 +136,22 @@ def analyze_member(member, session):
         return
     today = date.today().replace(day=1)
     today = today.replace(month=today.month-1)
-    logging.info("Member %s," % member.name +
+    logging.info("member %d %s," % (member.id, member.name) +
         (" last amount %.2f" % member.last_fee if member.last_fee else ""))
 
     all_txs = session.query(Transaction)\
-        .filter(Transaction.member_id == member.id)\
+        .filter(Transaction.member_id == member.id) \
+        .filter(Transaction.type == TxType.MEMBER_FEE)\
         .order_by(Transaction.date)
 
     last_paid = None
     last_month_missing = False
     unchanged_months = 0
-    for first_last in util.months(from_date, today):
-        first_day, next_month = first_last
+    for first_day, next_month in util.months(from_date, today):
         month = first_day.strftime("%Y-%m")
+
+        first_day -= timedelta(days=config.crossover_days)
+        next_month -= timedelta(days=config.crossover_days)
 
         txs = all_txs\
             .filter(Transaction.date >= first_day)\
@@ -154,17 +170,22 @@ def analyze_member(member, session):
             last_month_missing = False
 
             if member.last_fee is None or member.last_fee != month_sum:
-                [logging.debug("    %s: % 20s | % .2f - %.50s",
-                    tx.date, tx.applicant_name, tx.amount, tx.purpose) for tx in txs]
-                unchanged_months = 0
+                if member_txs_additional(session, member, txs):
+                    unchanged_months += 1
+                else:
+                    unchanged_months = 0
 
-                logging.info("  %s - monthly amount%s EUR %.2f",
-                    month,
-                    " changed from %.2f to" % member.last_fee if member.last_fee else "",
-                    month_sum)
-                if month_sum != 0:
-                    member.last_fee = month_sum
-                    session.add(member)
+                    logging.info("  %s - monthly amount%s EUR %.2f",
+                        month,
+                        " changed from %.2f to" % member.last_fee if member.last_fee else "",
+                        month_sum)
+                    if len(txs) > 1:
+                        for tx in txs:
+                            logging.info("    %s", tx)
+
+                    if month_sum != 0:
+                        member.last_fee = month_sum
+                        session.add(member)
             else:
                 unchanged_months += 1
 

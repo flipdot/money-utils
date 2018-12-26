@@ -1,12 +1,19 @@
+import enum
 import logging
 from _sha256 import sha256
 from datetime import datetime
 
-from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey
+from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey, Enum
 
 import config
 from db import Base
 from schema.member import Member
+
+
+class TxType(enum.Enum):
+    MEMBER_FEE = 1
+    PROJECT_EXPENSE = 2
+
 
 copy_fields = [
     'original_amount',
@@ -73,6 +80,7 @@ class Transaction(Base):
     tx_id = Column(String, primary_key=True)
 
     member_id = Column(Integer, ForeignKey('member.id'), nullable=True)
+    type = Column(Enum(TxType), nullable=True, default=None)
 
     amount = Column(Numeric())
     original_amount = Column(Numeric())
