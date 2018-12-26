@@ -1,7 +1,7 @@
 fints
 flask
 flask_compress
-dataset
 python-dateutil
 fuzzywuzzy
 python-Levenshtein
+sqlalchemy>=1.3

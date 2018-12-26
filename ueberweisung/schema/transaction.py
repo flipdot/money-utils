@@ -3,7 +3,7 @@ import logging
 from _sha256 import sha256
 from datetime import datetime
 
-from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey, Enum
+from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey, Enum, JSON
 
 import config
 from db import Base
@@ -81,6 +81,7 @@ class Transaction(Base):
 
     member_id = Column(Integer, ForeignKey('member.id'), nullable=True)
     type = Column(Enum(TxType), nullable=True, default=None)
+    fee_months = Column(JSON, nullable=True, default=None)
 
     amount = Column(Numeric())
     original_amount = Column(Numeric())

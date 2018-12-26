@@ -2,13 +2,14 @@
 # coding: utf8
 
 import logging
+import re
 import sys
 from collections import defaultdict, Counter
 from datetime import date, timedelta
 from typing import Dict, List, Tuple
 
 from fuzzywuzzy import fuzz
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from sqlalchemy.orm import Query
 from sqlalchemy.orm.session import Session
 
@@ -94,6 +95,14 @@ def choose_member(tx: Transaction, members: List[Member]):
     return selected
 
 
+def detect_fee_commands(tx):
+    matches = re.findall(r'(?:^|\s)(2\d{3}-[01]\d)(?=$|\s)', tx.purpose)
+    if matches:
+        logging.info("Tx matched fee commands for months %s", matches)
+        logging.info("  %s", tx)
+        tx.fee_months = matches
+
+
 def link_transactions(session, members):
     logging.info("Linking new transactions...")
     member_tx_set = defaultdict(set)
@@ -113,7 +122,9 @@ def link_transactions(session, members):
         else:
             member = choose_member(tx, members)
             tx.member_id = member.id
+
         tx.type = TxType.MEMBER_FEE
+        detect_fee_commands(tx)
         session.add(tx)
 
     logging.info("%d new links", len(member_tx_set))
@@ -128,6 +139,8 @@ def member_txs_additional(session, member, txs: List[Transaction]):
             logging.info("Marking as project expense: %s", tx)
             tx.type = TxType.PROJECT_EXPENSE
         session.add_all(nonfee_txs)
+        return True
+    return False
 
 
 def analyze_member(member, session):
@@ -154,8 +167,16 @@ def analyze_member(member, session):
         next_month -= timedelta(days=config.crossover_days)
 
         txs = all_txs\
-            .filter(Transaction.date >= first_day)\
-            .filter(Transaction.date < next_month)
+            .filter(
+                or_(
+                    and_(
+                        Transaction.fee_months.is_(None),
+                        Transaction.date >= first_day,
+                        Transaction.date < next_month
+                    ),
+                    Transaction.fee_months.contains(month)
+                )
+            ).all()
 
         month_sum = sum([tx.amount for tx in txs])
 
@@ -169,23 +190,9 @@ def analyze_member(member, session):
                 logging.warning("  until %s" % first_day.strftime("%Y-%m"))
             last_month_missing = False
 
-            if member.last_fee is None or member.last_fee != month_sum:
-                if member_txs_additional(session, member, txs):
-                    unchanged_months += 1
-                else:
-                    unchanged_months = 0
-
-                    logging.info("  %s - monthly amount%s EUR %.2f",
-                        month,
-                        " changed from %.2f to" % member.last_fee if member.last_fee else "",
-                        month_sum)
-                    if len(txs) > 1:
-                        for tx in txs:
-                            logging.info("    %s", tx)
-
-                    if month_sum != 0:
-                        member.last_fee = month_sum
-                        session.add(member)
+            if member.last_fee != month_sum and not member_txs_additional(session, member, txs):
+                unchanged_months = 0
+                fee_changed(session, member, month_sum, month, txs)
             else:
                 unchanged_months += 1
 
@@ -202,6 +209,19 @@ def analyze_member(member, session):
         session.add(member)
     elif unchanged_months > 1:
         member.fee = member.last_fee
+        session.add(member)
+
+
+def fee_changed(session, member, month_sum, month, txs):
+    logging.info("  %s - monthly amount%s EUR %.2f",
+                 month,
+                 " changed from %.2f to" % member.last_fee if member.last_fee else "",
+                 month_sum)
+    if len(txs) > 1:
+        for tx in txs:
+            logging.info("    %s", tx)
+    if month_sum != 0:
+        member.last_fee = month_sum
         session.add(member)
 
 
