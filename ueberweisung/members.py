@@ -32,29 +32,44 @@ def main(args):
             .order_by(Member.last_name, Member.first_name)
         link_transactions(session, members)
 
+    # only use the current month if we are  past the 18th, instead use the last
+    today = date.today() - timedelta(days=18)
+    today = today.replace(day=1)
+    logging.info("Analyzing until %s", today)
+
     with db.tx() as session:
         members = session.query(Member) \
             .order_by(Member.last_name, Member.first_name)
         for member in members:
-            analyze_member(member, session)
+            analyze_member(member, today, session)
 
 
-def replace_umlauts(str):
+def replace_umlauts_1(str):
     return str.lower()\
         .replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")\
         .replace("ß", "ss")
 
+def replace_umlauts_2(str):
+    return str.lower() \
+        .replace("ä", "a").replace("ö", "o").replace("ü", "u") \
+        .replace("ß", "s")
+
 
 def like_name_patterns(member, glob="%"):
     if member.nick:
-        yield member.nick
+        yield glob + member.nick + glob
     yield glob + member.first_name + glob + member.last_name + glob
-    yield glob + member.last_name + glob + member.first_name
-    if replace_umlauts(member.name) != member.name.lower():
-        first = replace_umlauts(member.first_name)
-        last = replace_umlauts(member.last_name)
+    yield glob + member.last_name + glob + member.first_name + glob
+    if replace_umlauts_1(member.name) != member.name.lower():
+        first = replace_umlauts_1(member.first_name)
+        last = replace_umlauts_1(member.last_name)
         yield glob + first + glob + last + glob
-        yield glob + last + glob + first
+        yield glob + last + glob + first + glob
+    if replace_umlauts_2(member.name) != member.name.lower():
+        first = replace_umlauts_2(member.first_name)
+        last = replace_umlauts_2(member.last_name)
+        yield glob + first + glob + last + glob
+        yield glob + last + glob + first + glob
 
 
 def txs_by_member(session: Session, member: Member) -> Query:
@@ -143,12 +158,11 @@ def member_txs_additional(session, member, txs: List[Transaction]):
     return False
 
 
-def analyze_member(member, session):
+def analyze_member(member, today, session):
     from_date = find_first_date(member, session)
     if not from_date:
         return
-    today = date.today().replace(day=1)
-    today = today.replace(month=today.month-1)
+
     logging.info("member %d %s," % (member.id, member.name) +
         (" last amount %.2f" % member.last_fee if member.last_fee else ""))
 
