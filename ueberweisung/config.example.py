@@ -23,3 +23,7 @@ debug = False
 # number of days to shift month boundary
 # used to mark payments coming on the 29th for the next month
 crossover_days = 5
+
+# We ignore transactions that are not within the requested time frame.
+# allow some fuzz time in case the bank does not know how to math
+import_fuzz_grace_days = 2

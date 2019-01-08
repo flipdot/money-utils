@@ -70,7 +70,7 @@ def load_transactions(session, last_load: Status):
         if fetch_to > now:
             fetch_to = now
 
-        res = load_chunk(session, fetch_from, fetch_to)
+        res = load_chunk(session, fetch_from, fetch_to, now)
         if not res:
             return
         if fetch_to >= now:
@@ -80,7 +80,8 @@ def load_transactions(session, last_load: Status):
     session.add(last_load)
 
 
-def load_chunk(session: Session, fetch_from: date, fetch_to: date):
+def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date):
+    logging.info("Fetching TXs from %s to %s", fetch_from, fetch_to)
     acc = hbci_client.get_account()
     conn = hbci_client.get_connection()
     error = False
@@ -91,7 +92,18 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date):
     conn.add_response_callback(log_callback)
     txs = conn.get_transactions(acc, fetch_from, fetch_to)
 
-    new_txs = [Transaction(tx) for tx in txs]
+    new_txs = []
+    for tx in txs:
+        tx = Transaction(tx)
+        if tx.entry_date > now:
+            logging.warning("Ignoring future tx: %s", tx)
+            continue
+        fuzz = timedelta(days=config.import_fuzz_grace_days)
+        if tx.date + fuzz < fetch_from or tx.date - fuzz > fetch_to:
+            logging.warning("Ignoring tx which is not in requested range: %s", tx)
+            continue
+        new_txs.append(tx)
+
     logging.info("Fetched %d txs", len(new_txs))
     if error:
         logging.error("Errors occurred")
