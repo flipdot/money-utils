@@ -10,7 +10,7 @@ from db import Base
 class PayInterval(enum.Enum):
     MONTHLY = 1
     SIX_MONTH = 2
-    YEAR = 3
+    YEARLY = 3
     VARIABLE = 4
 
 class Member(Base):
