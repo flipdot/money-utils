@@ -17,7 +17,7 @@ load_back_initial = timedelta(days=365 * 1)
 load_back_incremental = timedelta(days=7)
 load_interval_max = timedelta(minutes=config.load_interval_minutes)
 
-drinks_regex = re.compile(r'^drinks?\s+(?P<uid>\d+)\s+(?P<info>.*)$', re.I)
+drinks_regex = re.compile(r'^drinks?\s+(?P<uid>\d+)(\s+(?P<info>.*))?$', re.I)
 #drinks_regex = re.compile(r'^MIETE?\s+(?P<info>.*)\s+(?P<uid>\d+)$', re.I)
 
 
@@ -96,11 +96,11 @@ def load_recharges():
             continue
         uid = match.group("uid")
         amount = str(tx.data['amount'].amount)
-        tx_date = str(tx.data['entry_date'])
+        tx_date = str(tx.data['date'])
         if uid not in recharges_by_uid:
             recharges_by_uid[uid] = []
         info = match.group("info")
-        info = re.sub(r'[^\w \-_.,;:]', '_', info)
+        info = re.sub(r'[^\w \-_.,;:]', '_', info) if info else ''
         r = {'uid': uid, 'info': info, 'amount': amount, 'date': tx_date}
         recharges_by_uid[uid].append(r)
     # sort all

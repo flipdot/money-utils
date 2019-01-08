@@ -9,7 +9,7 @@ from fints.client import FinTS3PinTanClient
 import config
 
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("fints.dialog").setLevel(logging.WARN)
+logging.getLogger("fints.dialog").setLevel(logging.INFO)
 
 pin = None
 conn = None
