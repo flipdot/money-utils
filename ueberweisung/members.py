@@ -6,8 +6,9 @@ import re
 import sys
 from collections import defaultdict, Counter
 from datetime import date, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Iterable
 
+from dateutil.relativedelta import relativedelta
 from fuzzywuzzy import fuzz
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import Query
@@ -16,6 +17,8 @@ from sqlalchemy.orm.session import Session
 import config
 import db
 import util
+from schema.fee_entry import FeeEntry
+from schema.fee_util import fee_amounts, PayInterval, common_fee_amounts, month_regex
 from schema.member import Member
 from schema.transaction import Transaction, TxType
 
@@ -163,13 +166,16 @@ def analyze_member(member, today, session):
     if not from_date:
         return
 
-    logging.info("member %d %s," % (member.id, member.name) +
-        (" last amount %.2f" % member.last_fee if member.last_fee else ""))
+    logging.info(" === Member %d %s," % (member.id, member.name) +
+        (" last amount %.2f" % member.last_fee if member.last_fee else "") +
+        (" interval %s" % member.pay_interval if member.pay_interval else ""))
 
     all_txs = session.query(Transaction)\
         .filter(Transaction.member_id == member.id) \
         .filter(Transaction.type == TxType.MEMBER_FEE)\
         .order_by(Transaction.date)
+
+    analyze_fees(member=member, today=today, session=session, all_txs=all_txs)
 
     last_paid = None
     last_month_missing = False
@@ -224,6 +230,76 @@ def analyze_member(member, today, session):
     elif unchanged_months > 1:
         member.fee = member.last_fee
         session.add(member)
+
+
+def analyze_fees(member, today, session, all_txs: Query):
+    txs_without_entry: Iterable[Transaction] = all_txs \
+        .outerjoin(FeeEntry, FeeEntry.tx_id == Transaction.tx_id) \
+        .filter(FeeEntry.member_id == None)
+
+    for tx in txs_without_entry:
+        logging.debug("tx w/o entry: %s", tx)
+
+        month = tx.date + relativedelta(months=1)
+        month = month - relativedelta(days=config.crossover_days)
+        month = month.replace(day=1)
+        entry = FeeEntry(member_id=member.id, month=month, tx_id=tx.tx_id, fee=tx.amount,
+            pay_interval=PayInterval.MONTHLY)
+
+        if month_command(tx):
+            split_fee_command(tx, session, entry)
+        elif tx.amount in fee_amounts:
+            logging.info('fee entry: %s %s', entry.month, tx)
+            session.add(entry)
+        elif tx.amount / 12 == member.fee:
+            split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
+        elif tx.amount / 6 == member.fee:
+            split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
+        elif tx.amount / 12 in common_fee_amounts:
+            split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
+        elif tx.amount / 6 in common_fee_amounts:
+            split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
+        else:
+            logging.warning("assuming monthly: %s", tx)
+            logging.info('fee entry: %s %s', entry.month, tx)
+            session.add(entry)
+
+
+def split_fee_months(entry, session, num_months, pay_interval, tx):
+    entry.fee /= num_months
+    entry.pay_interval = pay_interval
+    for m in range(num_months):
+        month_replaced = entry.month + relativedelta(months=m)
+        month_replaced = month_replaced.replace(day=1)
+        m_entry = entry.replace(month=month_replaced)
+        logging.info('fee entry: %s (%.2f) %s', m_entry.month, m_entry.fee, tx)
+        session.add(m_entry)
+
+
+def month_command(tx):
+    months = []
+    try:
+        for match in month_regex.finditer(tx.purpose):
+            year = int(match.group('year'))
+            month = int(match.group('month'))
+            d = date(year, month, 1)
+            if d > tx.date + relativedelta(years=2) or d < tx.date - relativedelta(months=2):
+                logging.warning("possible month command ignored, out of range (-2 months or +24 months): %s", tx)
+                return None
+            months.append(d)
+        return months
+    except ValueError:
+        return None
+
+
+def split_fee_command(tx, session, entry):
+    months = month_command(tx)
+    entry.fee /= len(months)
+    entry.pay_interval = PayInterval.VARIABLE
+    for month in months:
+        m_entry = entry.replace(month=month)
+        logging.info('fee entry: %s %s', m_entry.month, tx)
+        session.add(m_entry)
 
 
 def fee_changed(session, member, month_sum, month, txs):

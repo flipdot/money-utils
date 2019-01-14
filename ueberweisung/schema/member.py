@@ -1,20 +1,13 @@
-import enum
-
 from sqlalchemy import Column, Integer, String, Numeric, Date, Enum
-from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from db import Base
+from schema.fee_util import PayInterval
 
-class PayInterval(enum.Enum):
-    MONTHLY = 1
-    SIX_MONTH = 2
-    YEARLY = 3
-    VARIABLE = 4
 
 class Member(Base):
     __tablename__ = 'member'
+
     id = Column(Integer, primary_key=True)
     first_name = Column(String(), nullable=False, default='')
     last_name = Column(String(), nullable=False, default='')
