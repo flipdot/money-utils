@@ -1,1 +1,5 @@
 env
+**/.idea/workspace.xml
+**/.idea/dataSources*
+
+*.sqlite
