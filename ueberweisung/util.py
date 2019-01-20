@@ -1,7 +1,10 @@
+from datetime import date
+from typing import Iterable, Iterator
+
 from dateutil.relativedelta import relativedelta
 
 
-def months(from_date, to_date):
+def months(from_date: date, to_date: date) -> Iterator[date]:
     from_month = from_date.replace(day=1)
     to_month = to_date.replace(day=1)
 

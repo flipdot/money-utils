@@ -8,7 +8,6 @@ from sqlalchemy.orm import relationship
 
 import config
 from db import Base
-from schema.fee_entry import FeeEntry
 
 
 class TxType(enum.Enum):

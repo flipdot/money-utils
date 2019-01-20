@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from db import Base
 from schema.fee_util import PayInterval
+from schema.transaction import Transaction
 
 
 class FeeEntry(Base):
@@ -18,7 +19,7 @@ class FeeEntry(Base):
     # --- Relationships ---
 
     member = relationship('Member', back_populates='fee_entries')
-    tx = relationship('Transaction', back_populates='fee_entries')
+    tx = relationship(Transaction, back_populates='fee_entries')
 
     def __str__(self):
         return self.__dict__

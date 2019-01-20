@@ -1,9 +1,7 @@
 import logging
 from contextlib import contextmanager
-from typing import Generator, Iterator
+from typing import Iterator
 
-import dataset
-import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker, scoped_session
@@ -47,6 +45,7 @@ def init(debug=False):
 
     with tx() as session:
         import schema
+        from schema import member, fee_entry, transaction, status
         Base.metadata.create_all(conn.engine)
 
     return conn
