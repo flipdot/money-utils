@@ -41,11 +41,14 @@ def main(args):
     logging.info("Analyzing until %s", today)
 
     with db.tx() as session:
-        members = session.query(Member) \
-            .order_by(Member.last_name, Member.first_name)
-        for member in members:
-            analyze_member(member, today, session)
+        member_ids = session.query(Member.id) \
+            .order_by(Member.last_name, Member.first_name)\
+            .all()
+    for id in member_ids:
+        with db.tx() as session:
+            analyze_member(session.query(Member).get(id), today, session)
 
+    #TODO check whether tx entries in fee_entry match up with fee sum
 
 def replace_umlauts_1(str):
     return str.lower()\
@@ -113,14 +116,6 @@ def choose_member(tx: Transaction, members: List[Member]):
     return selected
 
 
-def detect_fee_commands(tx):
-    matches = re.findall(r'(?:^|\s)(2\d{3}-[01]\d)(?=$|\s)', tx.purpose)
-    if matches:
-        logging.info("Tx matched fee commands for months %s", matches)
-        logging.info("  %s", tx)
-        tx.fee_months = matches
-
-
 def link_transactions(session, members):
     logging.info("Linking new transactions...")
     member_tx_set = defaultdict(set)
@@ -142,7 +137,6 @@ def link_transactions(session, members):
             tx.member_id = member.id
 
         tx.type = TxType.MEMBER_FEE
-        detect_fee_commands(tx)
         session.add(tx)
 
     logging.info("%d new links", len(member_tx_set))
@@ -168,7 +162,7 @@ def analyze_member(member, today, session):
 
     logging.info(" === Member %d %s," % (member.id, member.name) +
         (" last amount %.2f" % member.last_fee if member.last_fee else "") +
-        (" interval %s" % member.pay_interval if member.pay_interval else ""))
+        (" interval %s" % member.pay_interval.value if member.pay_interval else ""))
 
     all_txs = session.query(Transaction)\
         .filter(Transaction.member_id == member.id) \
@@ -183,21 +177,7 @@ def analyze_member(member, today, session):
     for first_day, next_month in util.months(from_date, today):
         month = first_day.strftime("%Y-%m")
 
-        first_day -= timedelta(days=config.crossover_days)
-        next_month -= timedelta(days=config.crossover_days)
-
-        txs = all_txs\
-            .filter(
-                or_(
-                    and_(
-                        Transaction.fee_months.is_(None),
-                        Transaction.date >= first_day,
-                        Transaction.date < next_month
-                    ),
-                    Transaction.fee_months.contains(month)
-                )
-            ).all()
-
+        txs = member.txs
         month_sum = sum([tx.amount for tx in txs])
 
         if month_sum == 0:
@@ -235,13 +215,15 @@ def analyze_member(member, today, session):
 def analyze_fees(member, today, session, all_txs: Query):
     txs_without_entry: Iterable[Transaction] = all_txs \
         .outerjoin(FeeEntry, FeeEntry.tx_id == Transaction.tx_id) \
-        .filter(FeeEntry.member_id == None)
+        .filter(FeeEntry.member_id.is_(None))\
+        .all()
+    logging.info("    Creating fee entries for %d new txs", len(txs_without_entry))
 
     for tx in txs_without_entry:
+
         logging.debug("tx w/o entry: %s", tx)
 
-        month = tx.date + relativedelta(months=1)
-        month = month - relativedelta(days=config.crossover_days)
+        month = tx.date + relativedelta(days=config.crossover_days)
         month = month.replace(day=1)
         entry = FeeEntry(member_id=member.id, month=month, tx_id=tx.tx_id, fee=tx.amount,
             pay_interval=PayInterval.MONTHLY)
@@ -277,23 +259,44 @@ def split_fee_months(entry, session, num_months, pay_interval, tx):
 
 
 def month_command(tx):
-    months = []
     try:
-        for match in month_regex.finditer(tx.purpose):
+        months = list(month_command_ymd(tx.purpose))
+        if not months:
+            months = list(month_command_year_month(tx.purpose))
+        if not months:
+            return None
+        for d in months:
+            if d > tx.date + relativedelta(years=2) or d < tx.date - relativedelta(months=6):
+                logging.warning("possible month command ignored, out of range (-2 months or +24 months): %s", tx)
+                return None
+        return months
+    except (ValueError, KeyError):
+        return None
+
+
+def month_command_ymd(text):
+    matches = month_regex.finditer(text)
+    if matches:
+        for match in matches:
             year = int(match.group('year'))
             month = int(match.group('month'))
             d = date(year, month, 1)
-            if d > tx.date + relativedelta(years=2) or d < tx.date - relativedelta(months=2):
-                logging.warning("possible month command ignored, out of range (-2 months or +24 months): %s", tx)
-                return None
-            months.append(d)
-        return months
-    except ValueError:
-        return None
+            yield d
+
+
+def month_command_year_month(text):
+    month_names_or = "|".join(util.months_german.keys())
+    matches = re.finditer(r'(?:^|\s)(?P<month>%s) ?(?P<year>\d{4})(?=$|\s)' % month_names_or, text)
+    if matches:
+        for match in matches:
+            month_num = util.months_german[match.group('month')]
+            yield date(int(match.group('year')), month_num, 1)
+
 
 
 def split_fee_command(tx, session, entry):
     months = month_command(tx)
+    logging.info("Tx matched fee commands for months %s", months)
     entry.fee /= len(months)
     entry.pay_interval = PayInterval.VARIABLE
     for month in months:

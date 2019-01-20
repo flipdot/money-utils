@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Numeric, Date, Enum
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
 
 from db import Base
 from schema.fee_util import PayInterval
@@ -20,6 +21,11 @@ class Member(Base):
 
     fee = Column(Numeric())
     pay_interval = Column(Enum(PayInterval), nullable=False, default=PayInterval.MONTHLY)
+
+    # --- Relationships ---
+
+    txs = relationship('Transaction', order_by='Transaction.date', back_populates='member')
+    fee_entries = relationship('FeeEntry', order_by='FeeEntry.month', back_populates='member')
 
     @hybrid_property
     def name(self):

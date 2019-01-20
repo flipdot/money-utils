@@ -4,10 +4,11 @@ from _sha256 import sha256
 from datetime import datetime
 
 from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey, Enum, JSON
+from sqlalchemy.orm import relationship
 
 import config
 from db import Base
-from schema.member import Member
+from schema.fee_entry import FeeEntry
 
 
 class TxType(enum.Enum):
@@ -81,7 +82,13 @@ class Transaction(Base):
 
     member_id = Column(Integer, ForeignKey('member.id'), nullable=True)
     type = Column(Enum(TxType), nullable=True, default=None)
-    fee_months = Column(JSON, nullable=True, default=None)
+
+    # --- Relationships ---
+
+    fee_entries = relationship('FeeEntry', order_by='FeeEntry.month', back_populates="tx")
+    member = relationship('Member', back_populates='txs')
+
+    # --- SEPA fields ---
 
     amount = Column(Numeric())
     original_amount = Column(Numeric())
