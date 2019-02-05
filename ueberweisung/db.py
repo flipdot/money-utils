@@ -35,8 +35,9 @@ def init(debug=False):
     global conn, session_maker, base
     if conn: return conn
     conn = create_engine('sqlite:///%s' % config.db_path)
-    session_maker = scoped_session(sessionmaker(autocommit=False,
-            autoflush=False,
+    session_maker = scoped_session(sessionmaker(
+            autocommit=False,
+            autoflush=True,
             bind=conn))
     Base.query = session_maker.query_property()
 

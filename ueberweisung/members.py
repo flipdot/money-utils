@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple, Iterable
 from dateutil.relativedelta import relativedelta
 from fuzzywuzzy import fuzz
 from sqlalchemy import or_, and_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Query
 from sqlalchemy.orm.session import Session
 
@@ -217,7 +218,7 @@ def analyze_member(member, today, session):
         session.add(member)
 
 
-def analyze_fees(member, today, session, all_txs: Query):
+def analyze_fees(member, today, session: Session, all_txs: Query):
     txs_without_entry: List[Transaction] = all_txs \
         .outerjoin(FeeEntry, FeeEntry.tx_id == Transaction.tx_id) \
         .filter(FeeEntry.member_id.is_(None))\
@@ -226,29 +227,40 @@ def analyze_fees(member, today, session, all_txs: Query):
 
     for tx in txs_without_entry:
         logging.debug("tx w/o entry: %s", tx)
+        entries = list(split_into_entries(member, session, tx))
+        try:
+            session.add_all(entries)
+            session.commit()
+        except IntegrityError as e:
+            session.rollback()
+            logging.warning("Entries colliding! %s", entries)
+            delete_entries = session.query(FeeEntry).filter_by(member_id=member.id)\
+                .filter(FeeEntry.month.in_([entry.month for entry in entries]))
+            logging.warning("Deleting these: %s", delete_entries.all())
+            delete_entries.delete(synchronize_session='fetch')
 
-        month = tx.date + relativedelta(days=config.crossover_days)
-        month = month.replace(day=1)
-        entry = FeeEntry(member_id=member.id, month=month, tx_id=tx.tx_id, fee=tx.amount,
-            pay_interval=PayInterval.MONTHLY)
-
-        if month_command(tx):
-            split_fee_command(tx, session, entry)
-        elif tx.amount in fee_amounts:
-            logging.info('fee entry: %s %s', entry.month, tx)
-            session.add(entry)
-        elif tx.amount / 12 == member.fee:
-            split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
-        elif tx.amount / 6 == member.fee:
-            split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
-        elif tx.amount / 12 in common_fee_amounts:
-            split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
-        elif tx.amount / 6 in common_fee_amounts:
-            split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
-        else:
-            logging.warning("Fee entry unclear! Assuming monthly for now")
-            logging.info('fee entry: %s %s', entry.month, tx)
-            session.add(entry)
+def split_into_entries(member, session, tx) -> Iterable[FeeEntry]:
+    month = tx.date + relativedelta(days=config.crossover_days)
+    month = month.replace(day=1)
+    entry = FeeEntry(member_id=member.id, month=month, tx=tx, fee=tx.amount,
+        pay_interval=PayInterval.MONTHLY)
+    if month_command(tx):
+        return split_fee_command(tx, session, entry)
+    elif tx.amount in fee_amounts:
+        logging.info('fee entry: %s %s', entry.month, tx)
+        yield entry
+    elif tx.amount / 12 == member.fee:
+        return split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
+    elif tx.amount / 6 == member.fee:
+        return split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
+    elif tx.amount / 12 in common_fee_amounts:
+        return split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
+    elif tx.amount / 6 in common_fee_amounts:
+        return split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
+    else:
+        logging.warning("Fee entry unclear! Assuming monthly for now")
+        logging.info('fee entry: %s %s', entry.month, tx)
+        yield entry
 
 
 def split_fee_months(entry, session, num_months, pay_interval, tx):
@@ -259,7 +271,7 @@ def split_fee_months(entry, session, num_months, pay_interval, tx):
         month_replaced = month_replaced.replace(day=1)
         m_entry = entry.replace(month=month_replaced)
         logging.info('fee entry: %s (%.2f) %s', m_entry.month, m_entry.fee, tx)
-        session.add(m_entry)
+        yield m_entry
 
 
 def month_command(tx):
