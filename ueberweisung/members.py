@@ -18,7 +18,7 @@ import config
 import db
 import util
 from schema.fee_entry import FeeEntry
-from schema.fee_util import fee_amounts, PayInterval, common_fee_amounts, month_regex
+from schema.fee_util import fee_amounts, PayInterval, common_fee_amounts, month_regex_ymd, month_regex_ym
 from schema.member import Member
 from schema.transaction import Transaction, TxType
 
@@ -177,7 +177,12 @@ def analyze_member(member, today, session):
     for first_day, next_month in util.months(from_date, today):
         month = first_day.strftime("%Y-%m")
 
-        txs = member.txs
+        txs = session.query(Transaction)\
+            .join(FeeEntry, Transaction.tx_id == FeeEntry.tx_id)\
+            .filter(Transaction.member == member)\
+            .filter(FeeEntry.month == first_day)\
+            .all()
+
         month_sum = sum([tx.amount for tx in txs])
 
         if month_sum == 0:
@@ -213,14 +218,13 @@ def analyze_member(member, today, session):
 
 
 def analyze_fees(member, today, session, all_txs: Query):
-    txs_without_entry: Iterable[Transaction] = all_txs \
+    txs_without_entry: List[Transaction] = all_txs \
         .outerjoin(FeeEntry, FeeEntry.tx_id == Transaction.tx_id) \
         .filter(FeeEntry.member_id.is_(None))\
         .all()
     logging.info("    Creating fee entries for %d new txs", len(txs_without_entry))
 
     for tx in txs_without_entry:
-
         logging.debug("tx w/o entry: %s", tx)
 
         month = tx.date + relativedelta(days=config.crossover_days)
@@ -242,7 +246,7 @@ def analyze_fees(member, today, session, all_txs: Query):
         elif tx.amount / 6 in common_fee_amounts:
             split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
         else:
-            logging.warning("assuming monthly: %s", tx)
+            logging.warning("Fee entry unclear! Assuming monthly for now")
             logging.info('fee entry: %s %s', entry.month, tx)
             session.add(entry)
 
@@ -262,8 +266,6 @@ def month_command(tx):
     try:
         months = list(month_command_ymd(tx.purpose))
         if not months:
-            months = list(month_command_year_month(tx.purpose))
-        if not months:
             return None
         for d in months:
             if d > tx.date + relativedelta(years=2) or d < tx.date - relativedelta(months=6):
@@ -275,22 +277,29 @@ def month_command(tx):
 
 
 def month_command_ymd(text):
-    matches = month_regex.finditer(text)
+    matches = list(month_regex_ymd.finditer(text))
     if matches:
         for match in matches:
             year = int(match.group('year'))
             month = int(match.group('month'))
             d = date(year, month, 1)
             yield d
-
-
-def month_command_year_month(text):
+        return
+    matches = list(month_regex_ym.finditer(text))
+    if matches:
+        for match in matches:
+            year = int(match.group('year'))
+            month = int(match.group('month'))
+            d = date(2000 + year, month, 1)
+            yield d
+        return
     month_names_or = "|".join(util.months_german.keys())
-    matches = re.finditer(r'(?:^|\s)(?P<month>%s) ?(?P<year>\d{4})(?=$|\s)' % month_names_or, text)
+    matches = list(re.finditer(r'(?:^|\s)(?P<month>%s) ?(?P<year>\d{4})(?=$|\s)' % month_names_or, text))
     if matches:
         for match in matches:
             month_num = util.months_german[match.group('month')]
             yield date(int(match.group('year')), month_num, 1)
+        return
 
 
 

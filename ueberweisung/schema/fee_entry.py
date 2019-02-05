@@ -22,7 +22,7 @@ class FeeEntry(Base):
     tx = relationship(Transaction, back_populates='fee_entries')
 
     def __str__(self):
-        return self.__dict__
+        return str(self.__dict__)
 
     def __repr__(self):
         return "FeeEntry{x}".format(x=self.__dict__)

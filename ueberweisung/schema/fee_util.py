@@ -28,4 +28,5 @@ class AllFee(enum.Enum):
 common_fee_amounts = {f.value: f.name for f in CommonFee}
 fee_amounts = {f.value: f.name for f in AllFee}
 
-month_regex = re.compile(r'(?:^|\s)(?P<year>\d{4})-(?P<month>\d{2})(?=$|\s)')
+month_regex_ymd = re.compile(r'(?:^|\s)(?P<year>\d{4})-(?P<month>\d{2})(?=$|\s)')
+month_regex_ym = re.compile(r'(?:^|\s)(?P<month>\d{2})/(?P<year>\d{2})(?=$|\s)')
