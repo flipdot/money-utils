@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date, Enum, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, Numeric, Date, Enum, ForeignKey, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from db import Base
@@ -9,7 +9,10 @@ from schema.transaction import Transaction
 class FeeEntry(Base):
     __tablename__ = 'fee_entry'
 
-    member_id = Column(Integer(), ForeignKey('member.id'), primary_key=True)
+    id = Column(String(), primary_key=True)
+    pk = UniqueConstraint('member_id', 'month')
+
+    member_id = Column(Integer(), ForeignKey('member.id'))
     month = Column(Date(), CheckConstraint("date(month, 'start of month') == month"), primary_key=True)
 
     tx_id = Column(String(), ForeignKey('transaction.tx_id'), nullable=False)
@@ -27,8 +30,13 @@ class FeeEntry(Base):
     def __repr__(self):
         return "FeeEntry{x}".format(x=self.__dict__)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.id = "{}|{}".format(self.member.id, self.month)
+
     def replace(self, **kwargs):
         for key in ['member_id', 'month', 'tx_id', 'fee', 'pay_interval']:
             if kwargs.get(key, None) is None:
                 kwargs[key] = self.__dict__[key]
         return FeeEntry(**kwargs)
+
