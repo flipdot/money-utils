@@ -10,8 +10,11 @@
     }
 </style>
 
+{% include 'nav.html' %}
+
 {{ html }}
 
+{% if txs %}
 <table>
     <thead>
         <tr>
@@ -38,3 +41,4 @@
         </tr>
     {% endfor %}
 </table>
+{% endif %}

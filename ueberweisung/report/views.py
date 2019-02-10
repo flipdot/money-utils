@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render
 
 import numpy as np
@@ -11,12 +11,12 @@ from django.template import loader
 from django.utils.safestring import mark_safe
 
 
-def home(request):
+def index(request):
     context = {
     }
     return render(request, 'index.html', context)
 
-def drinks(request):
+def drinks(request: HttpRequest):
     txs = drinks_transactions()
     sum = 0
     dates = []
@@ -48,7 +48,7 @@ def drinks(request):
     html = embed.file_html(p1, resources.CDN, "Getränkeverkauf")
     context = {
         'html': mark_safe(html),
-        'txs': txs_transformed
+        'txs': txs_transformed if request.user.is_staff else None
     }
     return render(request, 'drinks.html', context)
 
