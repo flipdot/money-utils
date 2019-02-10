@@ -1,0 +1,40 @@
+<style>
+    td.date {
+        width: 5em;
+    }
+    table thead th {
+        border-bottom: 1px solid #000;
+    }
+    table tr:nth-child(2n) td {
+        background-color: #eee;
+    }
+</style>
+
+{{ html }}
+
+<table>
+    <thead>
+        <tr>
+            <th>Datum</th>
+            <th>Betrag</th>
+            <th>Summe</th>
+            <th>Verwendungszweck</th>
+        </tr>
+    </thead>
+    {% for tx in txs %}
+        <tr>
+            <td class="date">
+                {{ tx.date }}
+            </td>
+            <td>
+                {{ tx.amount }}
+            </td>
+            <td>
+                {{ tx.sum }}
+            </td>
+            <td>
+                {{ tx.purpose }}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
