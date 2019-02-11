@@ -30,7 +30,8 @@ def drinks(request: HttpRequest):
             'sum': sum,
             'date': tx.date.isoformat(),
             'amount': tx.amount,
-            'purpose': tx.purpose
+            'purpose': tx.purpose,
+            'applicant': tx.applicant_name
         })
 
 

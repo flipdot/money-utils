@@ -20,6 +20,9 @@
     <orderEntry type="jdk" jdkName="Python 3.7 (money-utils)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="$MODULE_DIR$/ueberweisung/requirements.txt" />
+  </component>
   <component name="PyDocumentationSettings">
     <option name="renderExternalDocumentation" value="true" />
   </component>

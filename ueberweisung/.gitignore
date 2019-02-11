@@ -4,3 +4,4 @@ cache.bin
 *.pyc
 example.txt
 env
+.env

@@ -21,6 +21,7 @@
             <th>Datum</th>
             <th>Betrag</th>
             <th>Summe</th>
+            <th>Von/An</th>
             <th>Verwendungszweck</th>
         </tr>
     </thead>
@@ -34,6 +35,9 @@
             </td>
             <td>
                 {{ tx.sum }}
+            </td>
+            <td>
+                {{ tx.applicant }}
             </td>
             <td>
                 {{ tx.purpose }}

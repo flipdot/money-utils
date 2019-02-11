@@ -1,0 +1,13 @@
+fuzzywuzzy
+sqlalchemy==1.3.0b1
+python-dateutil
+bokeh
+fints
+numpy
+Django
+python-Levenshtein
+psycopg2-binary
+flask
+flask-compress
+
+pyyaml>=4.2b1
