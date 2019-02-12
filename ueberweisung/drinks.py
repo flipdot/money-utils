@@ -95,7 +95,7 @@ def load_recharges():
         if not tx.data['amount'].currency == "EUR":
             continue
         uid = match.group("uid")
-        amount = str(tx.data['amount'].amount)
+        amount = tx.data['amount'].amount
         tx_date = str(tx.data['date'])
         if uid not in recharges_by_uid:
             recharges_by_uid[uid] = []
