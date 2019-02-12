@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/bin/sh
+"exec" "`dirname $0`/.env/bin/python" "$0" "$@"
 import flask
 from flask_compress import Compress
 
