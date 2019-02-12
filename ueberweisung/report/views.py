@@ -1,4 +1,7 @@
-from django.db.models import Q
+from datetime import date
+
+import pandas
+from django.db.models import Q, Count
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render
 
@@ -10,11 +13,13 @@ from bokeh import plotting, embed, resources
 from django.template import loader
 from django.utils.safestring import mark_safe
 
+from .models import Transaction, FeeEntry
 
 def index(request):
     context = {
     }
     return render(request, 'index.html', context)
+
 
 def drinks(request: HttpRequest):
     txs = drinks_transactions()
@@ -34,7 +39,6 @@ def drinks(request: HttpRequest):
             'applicant': tx.applicant_name
         })
 
-
     p1: Figure = figure(x_axis_type="datetime", title="Getränkeverkauf")
     p1.sizing_mode='scale_width'
     p1.height = 400
@@ -53,8 +57,8 @@ def drinks(request: HttpRequest):
     }
     return render(request, 'drinks.html', context)
 
+
 def drinks_transactions():
-    from .models import Transaction
     tx = Transaction.objects\
         .filter(
             Q(purpose__contains='edeka')
@@ -65,3 +69,28 @@ def drinks_transactions():
             | Q(purpose__contains='EINNAHMEN GETRAENKEVERKAUF')
     ).order_by('date')
     return tx
+
+
+def member(request: HttpRequest):
+    members_per_month = FeeEntry.objects.values('month').order_by('month')\
+        .annotate(count=Count('month'))
+    df = pandas.DataFrame.from_dict(members_per_month)
+    df['month'] = df['month'].map(lambda m: m.strftime('%Y-%m'))
+
+    p1: Figure = figure(title="Member pro Monat", x_range=df['month'],
+        tooltips=[("Monat", "@month"), ("Anzahl", "@count")])
+    p1.sizing_mode='scale_width'
+
+    p1.vbar(x='month', width=0.8, source=df, bottom=0, top='count', fill_color='#9999ff', line_color=None, )
+
+    p1.y_range.start = 0
+    #p1.x_range.start = members_per_month[0]['month']
+    #p1.x_range.end = date.today().replace(day=1).strftime("%Y-%m")
+    p1.x_range.range_padding = 0.05
+    p1.xaxis.axis_label = "Monat"
+    p1.xaxis.major_label_orientation = 1.2
+    p1.outline_line_color = None
+
+    html = embed.file_html(p1, resources.CDN, "Member pro Monat")
+
+    return render(request, 'graph.html', {'html': mark_safe(html)})

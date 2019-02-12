@@ -32,7 +32,7 @@ class FeeEntry(Base):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.id = "{}|{}".format(self.member.id, self.month)
+        self.id = "{}|{}".format(self.member_id, self.month)
 
     def replace(self, **kwargs):
         for key in ['member_id', 'month', 'tx_id', 'fee', 'pay_interval']:

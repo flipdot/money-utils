@@ -15,6 +15,7 @@ MarkupSafe==1.1.0
 mt-940==4.13.0
 numpy==1.16.1
 packaging==19.0
+pandas==0.24.1
 Pillow==5.4.1
 psycopg2-binary==2.7.7
 pyparsing==2.3.1
