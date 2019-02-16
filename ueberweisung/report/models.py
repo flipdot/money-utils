@@ -18,7 +18,7 @@ from schema.transaction import TxType
 
 
 def choice_from_enum(enum):
-    return [(v.value, v.name) for v in enum]
+    return [(v.name, v.name.lower().capitalize()) for v in enum]
 
 
 class FeeEntry(models.Model):
@@ -42,7 +42,7 @@ class FeeEntry(models.Model):
 
 
 class Member(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=255)
     nick = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
