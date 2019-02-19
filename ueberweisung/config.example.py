@@ -6,6 +6,7 @@
 # Kasseler Sparkasse: https://banking-hs3.s-fints-pt-hs.de/fints30
 fints_url = "http://FILL_ME"
 
+# Kasseler Sparkasse: 52050353
 blz = "BLZ"
 user = "USERNAME"
 pin = "" # leave empty to ask
