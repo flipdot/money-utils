@@ -3,7 +3,7 @@ bokeh==1.0.4
 certifi==2018.11.29
 chardet==3.0.4
 Click==7.0
-Django==2.1.6
+Django==2.1.7
 fints==2.0.1
 Flask==1.0.2
 Flask-Compress==1.4.0
