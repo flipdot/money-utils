@@ -3,6 +3,7 @@
 # https://www.willuhn.de/wiki/doku.php?id=support:list:banken
 # https://www.homebanking-hilfe.de/forum/topic.php?t=1174
 # to find your url
+# Kasseler Sparkasse: https://banking-hs3.s-fints-pt-hs.de/fints30
 fints_url = "http://FILL_ME"
 
 blz = "BLZ"

@@ -1,11 +1,16 @@
-# ueberweisung
+# Ueberweisung
 Monitors money transfers to an account and filters them according to various patterns to save information.
 
-## setup
-copy `config.example.py` to `config.py` and customize contents according to your likings.
-start as systemd service, using `money.service`
+## Setup
+Copy `config.example.py` to `config.py` and customize contents according to your likings.
+
+
+
+
+# BELOW LEGACY
 
 ## output
+start as systemd service, using `money.service`
 The systemd service starts a webserver with the following endpoints:
 
 ### `/recharges.json`
