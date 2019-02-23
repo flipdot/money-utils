@@ -2,6 +2,7 @@ from django_cron import CronJobBase, Schedule
 
 import db
 import load_transactions
+import members
 
 
 class LoadTXsJob(CronJobBase):
@@ -10,4 +11,6 @@ class LoadTXsJob(CronJobBase):
 
     def do(self):
         db.init(False)
-        load_transactions.get_transactions(True)
+        load_transactions.get_transactions(False)
+
+        members.main([])

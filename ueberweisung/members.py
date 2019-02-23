@@ -31,6 +31,7 @@ def main(args):
         logging.getLogger('').setLevel(logging.DEBUG)
 
     db.init()
+    logging.info("Analyzing Member fees...")
 
     with db.tx() as session:
         members = session.query(Member) \
@@ -50,6 +51,7 @@ def main(args):
         with db.tx() as session:
             analyze_member(session.query(Member).get(id), today, session)
 
+    logging.info("Analyzing finished.")
     #TODO check whether tx entries in fee_entry match up with fee sum
 
 def replace_umlauts_1(str):
