@@ -1,19 +1,15 @@
-from datetime import date
-
 import pandas
+from bokeh import embed, resources
+from bokeh.plotting import figure, Figure
 from django.db.models import Q, Count
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render
-
-import numpy as np
-from bokeh.layouts import gridplot
-from bokeh.plotting import figure, show, output_file, Figure
-from bokeh import plotting, embed, resources
-# Create your views here.
-from django.template import loader
 from django.utils.safestring import mark_safe
 
+from report.decorators import basicauth
+from report.get_recharges import get_recharges
 from .models import Transaction, FeeEntry
+
 
 def index(request):
     context = {
@@ -94,3 +90,8 @@ def member(request: HttpRequest):
     html = embed.file_html(p1, resources.CDN, "Member pro Monat")
 
     return render(request, 'graph.html', {'html': mark_safe(html)})
+
+@basicauth(realm="Parole?")
+def recharges(request: HttpRequest):
+    all = get_recharges()
+    return JsonResponse(all)

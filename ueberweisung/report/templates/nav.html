@@ -1,6 +1,18 @@
 <nav>
-    <a href="{% url 'admin:index' %}">admin</a>
-    <a href="{% url 'report:index' %}">reports</a>
-    <a href="{% url 'report:drinks' %}">drinks</a>
-    <a href="{% url 'report:member' %}">member</a>
+    <section>
+        <p class="section-header">main</p>
+        <a href="{% url 'admin:index' %}">admin</a>
+        <a href="{% url 'report:index' %}">reports</a>
+    </section>
+
+    <section>
+        <p class="section-header">drinks</p>
+        <a href="{% url 'report:drinks' %}">Drinks sales</a>
+        <a href="{% url 'report:recharges' %}">Recharges (json)</a>
+    </section>
+
+    <section>
+        <p class="section-header">members</p>
+        <a href="{% url 'report:member' %}">Members per month</a>
+    </section>
 </nav>
