@@ -12,3 +12,5 @@ flask-compress
 pandas
 
 pyyaml>=4.2b1
+django-background-tasks
+django_cron

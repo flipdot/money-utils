@@ -37,7 +37,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'report'
+
+    'report',
+
+    'django_cron',
+    'background_task'
+]
+
+CRON_CLASSES = [
+    "bank.load_txs.LoadTXsJob",
 ]
 
 MIDDLEWARE = [
