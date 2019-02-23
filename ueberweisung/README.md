@@ -2,10 +2,29 @@
 Monitors money transfers to an account and filters them according to various patterns to save information.
 
 ## Setup
-Copy `config.example.py` to `config.py` and customize contents according to your likings.
+- Copy `config.example.py` to `config.py` and customize contents according to your likings.
 
+- Make a virtualenv:
+```bash
+python3 -m venv .env
+source .env/bin/activate
+pip install -r requirements.txt
+```
 
+- Make a database:
+```bash
+./manage.py migrate
+```
 
+- Run Cron jobs to import TXs:
+```bash
+./manage.py runcrons
+```
+
+- Start server:
+```bash
+./manage.py runserver
+```
 
 # BELOW LEGACY
 
