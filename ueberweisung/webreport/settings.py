@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'report',
 
     'django_cron',
-    'background_task'
 ]
 
 CRON_CLASSES = [
@@ -94,12 +93,12 @@ DATABASES = {
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
+#    {
+#        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+#    },
+#    {
+#        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+#    },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
