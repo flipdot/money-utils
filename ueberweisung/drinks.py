@@ -28,15 +28,10 @@ def tx_id(tx):
     # there are NO unique transaction IDs in hbci...
     raw = "|".join([
         str(tx.data['date']),
-        str(tx.data['entry_date']),
         str(tx.data['applicant_bin']),
         str(tx.data['applicant_iban']),
         str(tx.data['amount']),
-        str(tx.data['transaction_code']),
         str(tx.data['id']),
-        str(tx.data['status']),
-        str(tx.data['prima_nota']),
-        str(tx.data['posting_text']),
         str(tx.data['purpose']),
     ])
     sha = sha256(raw.encode("UTF8"))
