@@ -1,7 +1,0 @@
-config.py
-__pycache__
-cache.bin
-*.pyc
-example.txt
-env
-.env
