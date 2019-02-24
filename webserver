@@ -1,0 +1,9 @@
+#!/bin/sh
+set -euxo pipefail
+
+cd "$(dirname $0)"
+
+env="$(dirname $0)/.env/bin/"
+config_file=uwsgi.ini
+
+exec "$env"/uwsgi $config_file "$@"

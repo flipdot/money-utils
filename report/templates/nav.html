@@ -1,7 +1,11 @@
 <nav>
+
     <section>
         <p class="section-header">main</p>
-        <a href="{% url 'admin:index' %}">admin</a>
+        {% if user.is_superuser %}
+            <a href="{% url 'admin:index' %}">admin</a>
+            <a href="/admin/uwsgi">uwsgi</a>
+        {% endif %}
         <a href="{% url 'report:index' %}">reports</a>
     </section>
 

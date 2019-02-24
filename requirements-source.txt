@@ -10,6 +10,7 @@ psycopg2-binary
 flask
 flask-compress
 pandas
-
 pyyaml>=4.2b1
 django_cron
+django-uwsgi
+uwsgi

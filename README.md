@@ -31,6 +31,15 @@ Monitors money transfers to an account and filters them according to various pat
 
 - go to http://localhost:8000/ and enjoy the stats!
 
+## Deployment
+
+- Edit  uwsgi.ini
+
+```bash
+./manage.py collectstatic
+./webserver
+```
+
 ## Member Management
 Once the server is running, go to http://localhost:8000/admin.
 Log in, and click on "Members".
@@ -96,7 +105,7 @@ old report: loads transactions and drinks-recharges using an ad-hoc pickle cache
 
 Legacy; has been integrated into django app on `/recharges.py`
 
-[webserver.py](webserver.py): small flask webserver to do nothing but serve the output of drinks.py as JSON.
+[webserver](webserver): small flask webserver to do nothing but serve the output of drinks.py as JSON.
 
 Can be started as systemd service, using [money.service](money.service).
 

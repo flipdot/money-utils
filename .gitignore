@@ -6,3 +6,5 @@ example.txt
 env
 .env
 *.sqlite
+static/
+pidfile
