@@ -60,6 +60,10 @@ class Member(models.Model):
         managed = False
         db_table = 'member'
 
+    def __str__(self):
+        return " ".join([self.first_name, self.last_name,
+            "(%s)" % self.nick if self.nick else ''])
+
 
 class Status(models.Model):
     key = models.CharField(primary_key=True, max_length=255)
