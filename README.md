@@ -3,9 +3,23 @@
 Monitors money transfers to an account and filters them according to various patterns to report information.
 
 ## Setup
+- If you're on Debian, you will need some more packages:
+```bash
+apt install python3-dev build-essential
+```
+
+- Enable lingering services for your user:
+```bash
+sudo loginctl enable-linger $USER
+```
+
 - Copy `config.example.py` to `config.py` and customize contents according to your likings.
 
+The following script will:
+
 - Make a virtualenv and install dependencies from [requirements.txt](requirements.txt)
+- Setup a systemd-user-service `money.service` and start it
+
 ```bash
 ./setup.sh
 ```
