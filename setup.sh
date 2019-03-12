@@ -19,7 +19,7 @@ install_service() {
 
     sed "s#DIR#${DIR}#g" "$SERVICE" > "$SERVICE_PATH/$SERVICE"
     systemctl --user daemon-reload
-    systemctl --user enable --now "$SERVICE"
+    #systemctl --user enable --now "$SERVICE"
 }
 
 make_venv

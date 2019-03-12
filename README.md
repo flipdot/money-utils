@@ -18,7 +18,7 @@ sudo loginctl enable-linger $USER
 The following script will:
 
 - Make a virtualenv and install dependencies from [requirements.txt](requirements.txt)
-- Setup a systemd-user-service `money.service` and start it
+- Setup a systemd-user-service `money.service`
 
 ```bash
 ./setup.sh
@@ -41,9 +41,12 @@ The following script will:
 - Start server:
 ```bash
 ./manage.py runserver
+
+# or, enable and start the systemd service:
+systemctl --user enable --now money
 ```
 
-- go to http://localhost:8000/ and enjoy the stats!
+- go to http://localhost:5002/ and enjoy the stats!
 
 ## Deployment
 
