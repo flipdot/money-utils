@@ -1,9 +1,12 @@
 [Unit]
+Description=Money-Utils webservice
+After=network.target
 
 [Service]
+WorkingDirectory=DIR
+ExecStart=DIR/webserver
 Environment=PYTHONUNBUFFERED=1
-WorkingDirectory=%h/vcs/flipdot/money-utils/
-ExecStart=%h/vcs/flipdot/money-utils/webserver
+WorkingDirectory=DIR
 RestartSec=3
 
 [Install]
