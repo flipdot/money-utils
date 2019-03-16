@@ -82,12 +82,14 @@ def load_transactions(session, last_load: Status):
 
 
 def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date):
+    global error
     logging.info("Fetching TXs from %s to %s", fetch_from, fetch_to)
     acc = hbci_client.get_account()
     conn = hbci_client.get_connection()
     error = False
     def log_callback(_, response):
         if response.code[0] not in ('0', '1', '3'): # 0&1 info, 3 warning, rest err
+            global error
             error = True
 
     conn.add_response_callback(log_callback)
