@@ -118,8 +118,6 @@ Old stuff:
 
 old report: loads transactions and drinks-recharges using an ad-hoc pickle cache defined in [cache.py](cache.py).
 
-[cache_to_db.py](cache_to_db.py) can be used to migrate data from that cache structure into the sqlite database. No guarantees.
-
 Legacy; has been integrated into django app on `/recharges.py`
 
 [webserver](webserver): small flask webserver to do nothing but serve the output of drinks.py as JSON.

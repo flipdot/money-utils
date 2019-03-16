@@ -1,11 +1,14 @@
+import logging
 from _sha256 import sha256
 
+import mt940
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.datetime_safe import datetime
 
+import config
 from schema.fee_util import PayInterval
-from schema.transaction import TxType
+from schema.transaction import TxType, copy_fields, optional_fields, empty_fields
 
 
 # This is an auto-generated Django model module.
@@ -146,6 +149,31 @@ class Transaction(models.Model):
         ])
         sha = sha256(raw.encode("UTF8"))
         return sha.hexdigest()
+
+
+    @classmethod
+    def from_sepa(cls, hbci_tx: mt940.models.Transaction):
+        data = hbci_tx.data
+        tx = Transaction()
+        tx.amount = data['amount'].amount
+
+        for key in copy_fields:
+            if config.debug:
+                if key not in data and key not in optional_fields:
+                    logging.error("Putting key %s in optional fields list", key)
+                    optional_fields.append(key)
+            if key not in optional_fields:
+                value = data[key]
+            else:
+                value = data[key] if key in data else None
+            tx.__dict__[key] = value
+
+        for key in empty_fields:
+            if tx.__dict__[key] is None:
+                tx.__dict__[key] = ''
+
+        return tx
+
 
     def __str__(self) -> str:
         return "Tx[from: '{sender}', purpose: '{purpose}', amount: {amount:.2f}, date: {date}]" \

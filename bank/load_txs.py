@@ -6,7 +6,7 @@ import members
 
 
 class LoadTXsJob(CronJobBase):
-    schedule = Schedule(run_every_mins=1)
+    schedule = Schedule(run_every_mins=10)
     code = 'bank.load_txs_job'
 
     def do(self):
