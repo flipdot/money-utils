@@ -13,7 +13,7 @@ Flask-Compress==1.4.0
 fuzzywuzzy==0.17.0
 idna==2.8
 itsdangerous==1.1.0
-Jinja2==2.10
+Jinja2==2.10.1
 MarkupSafe==1.1.0
 mt-940==4.13.0
 numpy==1.16.1
