@@ -38,7 +38,7 @@ def drinks(request: HttpRequest):
 
     p1: Figure = figure(x_axis_type="datetime", title="Getränkeverkauf")
     p1.sizing_mode='scale_width'
-    p1.height = 400
+    p1.height = 300
     p1.grid.grid_line_alpha=0.3
     p1.xaxis.axis_label = 'Datum'
     p1.yaxis.axis_label = 'Summe'
@@ -87,7 +87,7 @@ def member(request: HttpRequest):
         title="Member pro Monat",
         x_range=df_members['month'],
         tooltips=[("Monat", "@month"), ("Anzahl", "@count")],
-        plot_height=400
+        plot_height=300
     )
     p1.sizing_mode='scale_width'
 
