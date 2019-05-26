@@ -150,7 +150,7 @@ class Transaction(Base):
         for key in empty_fields:
             if self.__dict__[key] is None:
                 self.__dict__[key] = ''
-
+        #TODO check whether entry_date and date are really Datetime Objects!!!s
         self.tx_id = self.gen_id()
 
     def gen_id(self):

@@ -31,7 +31,7 @@ class FeeEntry(models.Model):
     month = models.DateField()
 
     tx = models.ForeignKey('Transaction', models.DO_NOTHING)
-    fee = models.TextField()
+    fee = models.DecimalField(decimal_places=2, max_digits=10)
     pay_interval = models.CharField(max_length=9)
 
     class Meta:
