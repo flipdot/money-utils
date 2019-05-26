@@ -91,7 +91,7 @@ def member(request: HttpRequest):
 
     return render(request, 'graph.html', {'html': mark_safe(html)})
 
-@basicauth(realm="Parole?")
+#@basicauth(realm="Parole?")
 def recharges(request: HttpRequest):
     all = get_recharges()
     return JsonResponse(all)
