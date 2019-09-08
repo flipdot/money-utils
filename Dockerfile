@@ -7,18 +7,14 @@ RUN mkdir /install
 WORKDIR /install
 
 ADD requirements.txt .
-RUN pip install --install-option="--prefix=/install" -r requirements.txt
+RUN pip install -r requirements.txt
 
-#---
-FROM base
-COPY --from=builder /install /usr/local
 WORKDIR /app
-
-RUN mkdir -p .env && ln -s /usr/local/bin .env/bin
-#RUN apk --no-cache add libpq
+RUN useradd -m app && mkdir -p .env && ln -s /usr/local/bin .env/bin
 
 COPY . ./
 RUN ./manage.py collectstatic -l -c --noinput
+USER app
 
 EXPOSE 5002
 VOLUME ["/app/data"]
