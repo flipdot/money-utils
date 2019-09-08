@@ -1,5 +1,5 @@
 #!/bin/sh
-set -euxo pipefail
+set -eux
 
 cd "$(dirname $0)"
 

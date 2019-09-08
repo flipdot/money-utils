@@ -9,3 +9,5 @@ env
 static/
 pidfile
 data
+.ipynb_checkpoints
+.vscode
