@@ -11,6 +11,7 @@ blz = "BLZ"
 user = "USERNAME"
 pin = "" # leave empty to ask
 iban = "DE0000000000000"
+product_id = "FILL_ME"
 
 load_interval_minutes = 60
 

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import getpass
 import logging
+import subprocess
+import sys
 from datetime import date, timedelta
 from pprint import pformat
 
-from fints.client import FinTS3PinTanClient
+from fints.client import *
 
 import config
 
@@ -14,6 +16,9 @@ logging.getLogger("fints.dialog").setLevel(logging.INFO)
 pin = None
 conn = None
 accounts = None
+
+version = subprocess.check_output(["git", "describe", "--abbrev=5", "--always"]).decode('utf8').strip()
+print("version:", version)
 
 def get_connection():
     logging.getLogger('fints').setLevel(logging.INFO)
@@ -33,11 +38,17 @@ def get_connection():
     if not pin:
         pin = getpass.getpass("Please enter PIN: ")
     conn = FinTS3PinTanClient(
-        config.blz,
-        config.user,
-        pin,
-        config.fints_url
+        bank_identifier=config.blz,
+        user_id=config.user,
+        pin=pin,
+        server=config.fints_url,
+        product_id=config.product_id,
+        mode=FinTSClientMode.INTERACTIVE,
+        product_version=version
     )
+    #conn.set_tan_mechanism('910')
+    #conn.set_tan_mechanism('942')   # eg for mobiletan at gls
+
     return conn
 
 def get_account():

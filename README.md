@@ -13,7 +13,16 @@ apt install python3-dev build-essential
 sudo loginctl enable-linger $USER
 ```
 
+- latest psd2 branch:
+  - `pip install -U "git+https://github.com/raphaelm/python-fints.git@psd2#egg=fints"`
+
 - Copy `config.example.py` to `config.py` and customize contents according to your likings.
+  - insert your account information (`blz`, `user`, `pin`, `iban`)
+  - figure out your FinTS information (`product_id` & `fints_url`)
+    - https://www.hbci-zka.de/register/prod_register.htm
+  - set `bind_host` and `port`
+  - set `db_path`
+  - for flipdot members: [check teh forumz](TODO)
 
 The following script will:
 
