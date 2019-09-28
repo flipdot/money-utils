@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+}
+
+group = "money-utils"
+version = "1.1-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+dependencies {
+    compile 'com.github.hbci4j:hbci4j-core:3.1.11'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['java/src']
+        }
+    }
+
+    test {
+        java {
+            srcDirs = ['java/test']
+        }
+    }
+}
