@@ -1,4 +1,5 @@
-package org.kapott.hbci.examples;
+
+package org.flipdot.money_utils;
 
 import java.io.File;
 import java.util.Date;
@@ -325,7 +326,7 @@ public class UmsatzAbrufPinTan
           // zurueckliefern
           // In "code" muss der 3-stellige Code des vom User gemaess obigen
           // Optionen ausgewaehlte Verfahren eingetragen werden
-          String code = "";
+          String code = "911";
           retData.replace(0,retData.length(),code);
           break;
           
