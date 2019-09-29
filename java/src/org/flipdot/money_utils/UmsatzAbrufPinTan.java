@@ -1,26 +1,32 @@
 
 package org.flipdot.money_utils;
 
-import java.io.File;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-
+import com.sun.org.apache.bcel.internal.generic.NEW;
 import org.kapott.hbci.GV.HBCIJob;
 import org.kapott.hbci.GV_Result.GVRKUms;
 import org.kapott.hbci.GV_Result.GVRKUms.UmsLine;
 import org.kapott.hbci.GV_Result.GVRSaldoReq;
 import org.kapott.hbci.callback.AbstractHBCICallback;
 import org.kapott.hbci.exceptions.HBCI_Exception;
-import org.kapott.hbci.manager.BankInfo;
-import org.kapott.hbci.manager.HBCIHandler;
-import org.kapott.hbci.manager.HBCIUtils;
-import org.kapott.hbci.manager.HBCIVersion;
+import org.kapott.hbci.manager.*;
 import org.kapott.hbci.passport.AbstractHBCIPassport;
+import org.kapott.hbci.passport.AbstractPinTanPassport;
 import org.kapott.hbci.passport.HBCIPassport;
 import org.kapott.hbci.status.HBCIExecStatus;
 import org.kapott.hbci.structures.Konto;
 import org.kapott.hbci.structures.Value;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
+import static org.kapott.hbci.manager.HBCIUtils.LOG_ERR;
+import static org.kapott.hbci.manager.HBCIUtils.LOG_WARN;
 
 /**
  * Demo zum Abruf von Umsaetzen per PIN/TAN-Verfahren.
@@ -78,32 +84,22 @@ public class UmsatzAbrufPinTan
     HBCIUtils.setParam("client.passport.PinTan.init","1"); // Stellt sicher, dass der Passport initialisiert wird
 
     // Erzeugen des Passport-Objektes.
-    HBCIPassport passport = AbstractHBCIPassport.getInstance(passportFile);
-    
-    // Konfigurieren des Passport-Objektes.
-    // Das kann alternativ auch alles ueber den Callback unten geschehen
-    
-    // Das Land.
+    AbstractPinTanPassport passport = (AbstractPinTanPassport) AbstractHBCIPassport.getInstance(passportFile);
+    passport.setCurrentTANMethod(null);
     passport.setCountry("DE");
     
-    // Server-Adresse angeben. Koennen wir entweder manuell eintragen oder direkt von HBCI4Java ermitteln lassen
     BankInfo info = HBCIUtils.getBankInfo(BLZ);
     passport.setHost(info.getPinTanAddress());
-    
-    // TCP-Port des Servers. Bei PIN/TAN immer 443, da das ja ueber HTTPS laeuft.
     passport.setPort(443);
-    
     // Art der Nachrichten-Codierung. Bei Chipkarte/Schluesseldatei wird
     // "None" verwendet. Bei PIN/TAN kommt "Base64" zum Einsatz.
     passport.setFilterType("Base64");
-    
-    // Das Handle ist die eigentliche HBCI-Verbindung zum Server
-    HBCIHandler handle = null;
 
+    HBCIHandler handle = null;
     try
     {
       // Verbindung zum Server aufbauen
-      handle = new HBCIHandler(VERSION.getId(),passport);
+      handle = new HBCIHandler(VERSION.getId(), passport);
 
       // Wir verwenden einfach das erste Konto, welches wir zur Benutzerkennung finden
       Konto[] konten = passport.getAccounts();
@@ -200,8 +196,12 @@ public class UmsatzAbrufPinTan
     @Override
     public void log(String msg, int level, Date date, StackTraceElement trace)
     {
-      // Ausgabe von Log-Meldungen bei Bedarf
-      // System.out.println(msg);
+        System.out.println(msg + level + trace);
+    }
+
+    public void log(String msg, Throwable e)
+    {
+      System.out.println(msg + e);
     }
 
     /**
@@ -320,13 +320,13 @@ public class UmsatzAbrufPinTan
           // <code1>:<name1>|<code2>:<name2>|...
           // Bsp:
           // 911:smsTAN|920:chipTAN optisch|955:photoTAN
-          // String options = retData.toString();
-          
+          Arrays.stream(retData.toString().split("\\|"))
+            .forEachOrdered(System.out::println);
           // Der Callback muss den Code des zu verwendenden TAN-Verfahrens
           // zurueckliefern
           // In "code" muss der 3-stellige Code des vom User gemaess obigen
           // Optionen ausgewaehlte Verfahren eingetragen werden
-          String code = "911";
+          String code = "910";
           retData.replace(0,retData.length(),code);
           break;
           
@@ -350,7 +350,7 @@ public class UmsatzAbrufPinTan
             // werden. Hierfuer kann die Hilfsklasse "FlickerRenderer" verwendet
             // werden. Diese enthalt bereits das Parsen. Es muss lediglich die
             // Methode "paint" ueberschrieben werden.
-            // FlickerRenderer renderer = new FlickerRenderer(flicker);
+            FlickerRenderer renderer = new FlickerRenderer(flicker);
             
             // Hier TAN-Abfrage mit dem animierten Barcode anzeigen sowie
             // Eingabefeld fuer die TAN
@@ -362,6 +362,15 @@ public class UmsatzAbrufPinTan
             // Ist smsTAN, iTAN, o.ae.
             // Dialog zur TAN-Eingabe anzeigen mit dem Text aus "msg".
             String tan = null;
+            while (tan == null || tan.isEmpty()) {
+              log(msg, null);
+              try {
+                tan = new BufferedReader(new InputStreamReader(System.in)).readLine();
+              } catch (IOException e) {
+                log("reading input", e);
+              }
+              tan = tan.trim();
+            }
             retData.replace(0,retData.length(),tan);
           }
           
