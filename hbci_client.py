@@ -46,6 +46,8 @@ def get_connection():
         mode=FinTSClientMode.INTERACTIVE,
         product_version=version
     )
+    conn._need_twostep_tan_for_segment = lambda _: True
+    conn.fetch_tan_mechanisms()
     #conn.set_tan_mechanism('910')
     #conn.set_tan_mechanism('942')   # eg for mobiletan at gls
 
