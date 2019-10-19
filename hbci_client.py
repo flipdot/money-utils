@@ -18,7 +18,7 @@ conn = None
 accounts = None
 
 version = subprocess.check_output(["git", "describe", "--abbrev=5", "--always"]).decode('utf8').strip()
-print("version:", version)
+print("git version:", version)
 
 def get_connection():
     logging.getLogger('fints').setLevel(logging.INFO)

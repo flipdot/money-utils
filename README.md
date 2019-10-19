@@ -66,6 +66,18 @@ systemctl --user enable --now money
 ./webserver
 ```
 
+### Docker
+
+```bash
+docker build -t money-utils --build-arg SOURCE_COMMIT=$(git describe --always --no-abbrev) .
+
+docker run -it --rm -p 80:5002 -v $(pwd)/config.py:/app/config.py:ro -v $(pwd)/data.docker/:/app/data --name money-utils money-utils
+
+## in another window:
+docker exec -it money-utils ./manage.py migrate
+docker exec -it money-utils ./manage.py createsuperuser
+```
+
 ## Member Management
 Once the server is running, go to http://localhost:8000/admin.
 Log in, and click on "Members".

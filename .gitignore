@@ -8,6 +8,7 @@ env
 *.sqlite
 static/
 pidfile
-data
 .ipynb_checkpoints
 .vscode
+data/
+data.docker/

@@ -1,9 +1,22 @@
 #!/bin/sh
-set -eux
+set -eu
 
 cd "$(dirname $0)"
 
 env="$(dirname $0)/.env/bin/"
 config_file=uwsgi.ini
+
+[ -f config.py ] || (
+  echo "no config.py found!"
+  exit 1
+)
+
+(set -eu
+  sleep 10
+  while true; do
+    ./manage.py runcrons
+    sleep 60
+  done
+) &
 
 exec "$env"/uwsgi $config_file "$@"

@@ -19,7 +19,7 @@ bind_host = '127.0.0.1'
 port = 5002
 flask_debug = True
 
-db_path = "money.sqlite"
+db_path = "data/money.sqlite"
 
 debug = False
 
