@@ -16,8 +16,6 @@ conn = None
 accounts = None
 
 version = subprocess.check_output(["git", "describe", "--abbrev=5", "--always"]).decode('utf8').strip()
-print("git version:", version)
-version = "psd2t"
 version = version[:5]
 
 

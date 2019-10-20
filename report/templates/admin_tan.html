@@ -1,17 +1,24 @@
 {% include 'nav.html' %}
 
-{% if challenge %}
+{% if tan_request %}
     <form action="{% url 'report:tan' %}" method="post">
         {% csrf_token %}
-        <p class="tan-challenge">{{ challenge }}</p>
+        <p class="tan-challenge">{{ tan_request.challenge }}</p>
         <label for="tan">Enter TAN:</label>
-        <input type="number" maxlength="10" minlength="4" name="tan"/>
+        <input type="number" maxlength="10" minlength="6" name="tan"/>
+        <input type="hidden" name="date" value="{{ id }}"/>
         <input type="submit"/>
     </form>
-{% else %}
-    <p>OK. Processing TAN <pre>{{ tan }}</pre>.</p>
+{% elif tan %}
+    <p>OK. Processing TAN <b>{{ tan }}</b>.</p>
     <form action="{% url 'report:tan' %}" method="post">
         {% csrf_token %}
         <input type="submit" value="Go back"/>
+    </form>
+{% else %}
+    <p>Nothing to do.</p>
+    <form action="{% url 'report:tan' %}" method="post">
+        {% csrf_token %}
+        <input type="submit" value="Try again"/>
     </form>
 {% endif %}

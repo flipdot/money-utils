@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django_uwsgi',
 
     'report',
+    'bank',
 
     'django_cron',
 ]

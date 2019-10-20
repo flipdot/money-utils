@@ -1,15 +1,16 @@
 import re
 
 import pandas
-import zmq
 from bokeh import embed, resources
 from bokeh.models import Range1d, LinearAxis, LabelSet, ColumnDataSource
 from bokeh.plotting import figure, Figure
 from django.db.models import Q, Count, Avg
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render
+from django.utils.datetime_safe import datetime
 from django.utils.safestring import mark_safe
 
+from bank.models import TanRequest
 from report.get_recharges import get_recharges
 from .models import Transaction, FeeEntry
 
@@ -143,21 +144,14 @@ def recharges(request: HttpRequest):
     all = get_recharges()
     return JsonResponse(all)
 
-
-context = zmq.Context()
-socket = None
-
-def get_challenge():
-    global socket
-    if socket:
-        socket.close()
-        socket = None
-    socket = context.socket(zmq.REP)
-    socket.connect('tcp://127.0.0.1:5555')
-    msg = socket.recv_json()
-    print("got msg: %s", msg)
-    return msg['challenge']
-
+def get_request():
+    requests = TanRequest.objects\
+        .filter(expired=False)\
+        .filter(answer=None)\
+        .order_by('-date')
+    #print("requests:", requests)
+    if requests:
+        return requests[0]
 
 def admin_tan(request: HttpRequest):
     if not request.user.is_superuser:
@@ -165,11 +159,19 @@ def admin_tan(request: HttpRequest):
 
     if 'tan' in request.POST:
         tan = request.POST['tan']
+        date = request.POST['date']
+        print("got date:", date, "tan:", tan)
         tan = re.sub(r'[^a-zA-Z0-9]', "", tan)
         print("Got TAN:", tan)
-        socket.send_json({'type': 'tan_response', 'tan': tan})
-
+        tan_request = TanRequest.objects.get(pk=datetime.fromtimestamp(float(date)))
+        print("matched:", tan_request)
+        tan_request.answer = tan
+        tan_request.save()
+        
         return render(request, 'admin_tan.html', {'tan': tan})
 
-    challenge = get_challenge()
-    return render(request, 'admin_tan.html', {'challenge': challenge})
+    tan_request = get_request()
+    return render(request, 'admin_tan.html', {
+        'tan_request': tan_request,
+        'id': tan_request.date.timestamp() if tan_request else None
+    })

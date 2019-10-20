@@ -1,50 +1,40 @@
 import logging
+import time
 
-import zmq as zmq
 from django_cron import CronJobBase, Schedule
 
 import db
 import load_transactions
 import members
+from bank.models import TanRequest
 
 
 class LoadTXsJob(CronJobBase):
-    schedule = Schedule(run_every_mins=10)
+    schedule = Schedule(run_every_mins=5)
     code = 'bank.load_txs_job'
-
-    def __init__(self):
-        super().__init__()
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REQ)
 
     def do(self):
         db.init(False)
-        try:
-            self.socket.bind('tcp://127.0.0.1:5555')
-            load_transactions.get_transactions(False, self.tan_callback)
+        load_transactions.get_transactions(False, self.tan_callback)
 
-            members.main([])
-        finally:
-            self.socket.close()
+        members.main([])
 
     def tan_callback(self, res):
-        #if self.socket.poll(5 * 60 * 1000) <= 0:
-        #    logging.error("No connection got")
-        #    return None
 
-        msg = {'type': 'tan_request', 'challenge': res.challenge}
-        self.socket.send_json(msg)
+        request = TanRequest()
+        request.challenge = res.challenge
+        if getattr(res, 'challenge_hhduc', None):
+            request.hhduc = res.challenge_hhduc
+        request.save()
 
-        if self.socket.poll(5 * 60 * 1000) <= 0:
-            logging.error("No answer got")
-            return None
-
-        resp = self.socket.recv_json()
-        if resp['type'] != 'tan_response':
-            logging.error("Invalid response: %s", resp)
-            return None
-        return resp['tan']
-
-if __name__ == "__main__":
-    job = LoadTXsJob()
-    job.do()
+        start_time = time.monotonic()
+        while (not request.answer) and (time.monotonic() - start_time < 60 * 5):
+            request.refresh_from_db()
+            if request.answer:
+                logging.info("Got TAN answer %s %s", request, request.answer)
+                return request.answer
+            time.sleep(1)
+        logging.warning("TAN request timed out after 5 mins.")
+        request.expired = True
+        request.save()
+        return None

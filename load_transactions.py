@@ -61,12 +61,14 @@ def get_transactions(force=False, tan_callback=terminal_tan_callback):
             last_load = Status(key=LAST_LOAD)
 
         logging.info("Loading fresh transactions")
-        load_transactions(session, last_load)
+        load_transactions(session, last_load, tan_callback)
+
 
 def _query_transactions(session):
     return session.query(Transaction)
 
-def load_transactions(session, last_load: Status, tan_callback=terminal_tan_callback):
+
+def load_transactions(session, last_load: Status, tan_callback):
 
     last_transaction: Transaction = _query_transactions(session)\
         .order_by(desc(Transaction.entry_date))\
@@ -108,12 +110,14 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date, ta
     txs = conn.get_transactions(acc, fetch_from, fetch_to)
 
     while isinstance(txs, NeedTANResponse):
+        logging.info("Calling tan callback for %s", txs)
         tan = tan_callback(txs)
         if not tan:
             logging.error("No TAN got, aborting")
             return
         txs = conn.send_tan(txs, tan)
 
+    logging.info("got txs: len: %s, type: %s, %s", len(txs), type(txs), txs)
     new_txs = []
     for tx in txs:
         tx = Transaction(tx)
