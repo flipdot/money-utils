@@ -7,6 +7,7 @@ from bokeh.plotting import figure, Figure
 from django.db.models import Q, Count, Avg
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render
+from django.utils import timezone
 from django.utils.datetime_safe import datetime
 from django.utils.safestring import mark_safe
 
@@ -163,7 +164,9 @@ def admin_tan(request: HttpRequest):
         print("got date:", date, "tan:", tan)
         tan = re.sub(r'[^a-zA-Z0-9]', "", tan)
         print("Got TAN:", tan)
-        tan_request = TanRequest.objects.get(pk=datetime.fromtimestamp(float(date)))
+        tan_request = TanRequest.objects.get(pk=datetime.fromtimestamp(float(date), tz=timezone.utc))
+        if tan_request.answer or tan_request.expired:
+            return render(request, 'admin_tan.html', {'error': "TAN request expired"})
         print("matched:", tan_request)
         tan_request.answer = tan
         tan_request.save()

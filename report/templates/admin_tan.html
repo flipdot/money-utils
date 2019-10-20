@@ -1,4 +1,9 @@
 {% include 'nav.html' %}
+<style>
+    .error {
+        color: #c63232;
+    }
+</style>
 
 {% if tan_request %}
     <form action="{% url 'report:tan' %}" method="post">
@@ -9,16 +14,16 @@
         <input type="hidden" name="date" value="{{ id }}"/>
         <input type="submit"/>
     </form>
-{% elif tan %}
-    <p>OK. Processing TAN <b>{{ tan }}</b>.</p>
-    <form action="{% url 'report:tan' %}" method="post">
-        {% csrf_token %}
-        <input type="submit" value="Go back"/>
-    </form>
 {% else %}
-    <p>Nothing to do.</p>
+    {% if tan %}
+        <p>OK. Processing TAN <b>{{ tan }}</b>.</p>
+    {% elif error %}
+        <p class="error">{{ error }}</p>
+    {% else %}
+        <p>Nothing to do.</p>
+    {% endif %}
     <form action="{% url 'report:tan' %}" method="post">
         {% csrf_token %}
-        <input type="submit" value="Try again"/>
+        <input type="submit" value="Reload"/>
     </form>
 {% endif %}
