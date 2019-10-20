@@ -1,4 +1,7 @@
+import re
+
 import pandas
+import zmq
 from bokeh import embed, resources
 from bokeh.models import Range1d, LinearAxis, LabelSet, ColumnDataSource
 from bokeh.plotting import figure, Figure
@@ -7,7 +10,6 @@ from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render
 from django.utils.safestring import mark_safe
 
-from report.decorators import basicauth
 from report.get_recharges import get_recharges
 from .models import Transaction, FeeEntry
 
@@ -140,3 +142,34 @@ def member(request: HttpRequest):
 def recharges(request: HttpRequest):
     all = get_recharges()
     return JsonResponse(all)
+
+
+context = zmq.Context()
+socket = None
+
+def get_challenge():
+    global socket
+    if socket:
+        socket.close()
+        socket = None
+    socket = context.socket(zmq.REP)
+    socket.connect('tcp://127.0.0.1:5555')
+    msg = socket.recv_json()
+    print("got msg: %s", msg)
+    return msg['challenge']
+
+
+def admin_tan(request: HttpRequest):
+    if not request.user.is_superuser:
+        return "404 Not Found"
+
+    if 'tan' in request.POST:
+        tan = request.POST['tan']
+        tan = re.sub(r'[^a-zA-Z0-9]', "", tan)
+        print("Got TAN:", tan)
+        socket.send_json({'type': 'tan_response', 'tan': tan})
+
+        return render(request, 'admin_tan.html', {'tan': tan})
+
+    challenge = get_challenge()
+    return render(request, 'admin_tan.html', {'challenge': challenge})

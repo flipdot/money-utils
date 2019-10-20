@@ -1,0 +1,17 @@
+{% include 'nav.html' %}
+
+{% if challenge %}
+    <form action="{% url 'report:tan' %}" method="post">
+        {% csrf_token %}
+        <p class="tan-challenge">{{ challenge }}</p>
+        <label for="tan">Enter TAN:</label>
+        <input type="number" maxlength="10" minlength="4" name="tan"/>
+        <input type="submit"/>
+    </form>
+{% else %}
+    <p>OK. Processing TAN <pre>{{ tan }}</pre>.</p>
+    <form action="{% url 'report:tan' %}" method="post">
+        {% csrf_token %}
+        <input type="submit" value="Go back"/>
+    </form>
+{% endif %}

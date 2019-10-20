@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import getpass
-import logging
 import subprocess
-import sys
 from datetime import date, timedelta
 from pprint import pformat
 
@@ -11,7 +9,7 @@ from fints.client import *
 import config
 
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("fints.dialog").setLevel(logging.INFO)
+logging.getLogger("fints.dialog").setLevel(logging.DEBUG)
 
 pin = None
 conn = None
@@ -19,6 +17,9 @@ accounts = None
 
 version = subprocess.check_output(["git", "describe", "--abbrev=5", "--always"]).decode('utf8').strip()
 print("git version:", version)
+version = "psd2t"
+version = version[:5]
+
 
 def get_connection():
     logging.getLogger('fints').setLevel(logging.INFO)
@@ -61,7 +62,7 @@ def get_account():
     for acc in accounts:
         if acc.iban == config.iban:
             logging.info("Got account %s.", pformat(acc))
-            return acc
+            return conn, acc
     raise Exception("IBAN %s not found (got %s)", config.iban, pformat(accounts))
 
 if __name__ == "__main__":

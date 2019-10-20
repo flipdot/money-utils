@@ -5,17 +5,16 @@
 import logging
 import sys
 from datetime import date, timedelta, datetime
-from sqlalchemy import or_, desc
 
-from sqlalchemy.orm import Query
+from fints.client import NeedTANResponse
+from fints.hhd.flicker import terminal_flicker_unix
+from sqlalchemy import desc
 from sqlalchemy.orm.session import Session
 
 import config
 import db
 import hbci_client
-import util
 from drinks import load_interval_max
-from schema.member import Member
 from schema.status import Status, LAST_LOAD
 from schema.transaction import Transaction
 
@@ -35,7 +34,21 @@ def main(args):
     get_transactions(True)
 
 
-def get_transactions(force=False):
+def terminal_tan_callback(res):
+    logging.warning("Need TAN for transactions: %s", res.challenge)
+    if getattr(res, 'challenge_hhduc', None):
+        try:
+            terminal_flicker_unix(res.challenge_hhduc)
+        except KeyboardInterrupt as e:
+            logging.exception("interrupt", e)
+            pass
+    while True:
+        tan = input('Please enter TAN:')
+        if tan:
+            return tan
+
+
+def get_transactions(force=False, tan_callback=terminal_tan_callback):
     with db.tx() as session:
         last_load: Status = session.query(Status).filter_by(
             key=LAST_LOAD).first()
@@ -53,7 +66,7 @@ def get_transactions(force=False):
 def _query_transactions(session):
     return session.query(Transaction)
 
-def load_transactions(session, last_load: Status):
+def load_transactions(session, last_load: Status, tan_callback=terminal_tan_callback):
 
     last_transaction: Transaction = _query_transactions(session)\
         .order_by(desc(Transaction.entry_date))\
@@ -71,7 +84,7 @@ def load_transactions(session, last_load: Status):
         if fetch_to > now:
             fetch_to = now
 
-        res = load_chunk(session, fetch_from, fetch_to, now)
+        res = load_chunk(session, fetch_from, fetch_to, now, tan_callback)
         if not res:
             return
         if fetch_to >= now:
@@ -81,11 +94,10 @@ def load_transactions(session, last_load: Status):
     session.add(last_load)
 
 
-def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date):
+def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date, tan_callback):
     global error
     logging.info("Fetching TXs from %s to %s", fetch_from, fetch_to)
-    acc = hbci_client.get_account()
-    conn = hbci_client.get_connection()
+    conn, acc = hbci_client.get_account()
     error = False
     def log_callback(_, response):
         if response.code[0] not in ('0', '1', '3'): # 0&1 info, 3 warning, rest err
@@ -94,6 +106,13 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date):
 
     conn.add_response_callback(log_callback)
     txs = conn.get_transactions(acc, fetch_from, fetch_to)
+
+    while isinstance(txs, NeedTANResponse):
+        tan = tan_callback(txs)
+        if not tan:
+            logging.error("No TAN got, aborting")
+            return
+        txs = conn.send_tan(txs, tan)
 
     new_txs = []
     for tx in txs:
@@ -115,6 +134,7 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date):
 
     for tx in new_txs:
         session.merge(tx)
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
