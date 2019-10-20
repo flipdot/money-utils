@@ -1,3 +1,36 @@
+<head>
+    <style>
+        body {
+            color: #444444;
+            font-family: 'sans-serif';
+        }
+        nav {
+            display: flex;
+            width: 100%;
+            flex-direction: row;
+        }
+        nav section {
+            margin: .5rem;
+            width: 33.3333%;
+            display: flex;
+            flex-direction: column;
+            background-color: #fafafa;
+        }
+        nav section .section-header {
+            text-align: center;
+            font-weight: bold;
+        }
+        nav section a {
+            display: block;
+            padding: .6rem .1rem;
+        }
+        nav section a:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+    </style>
+</head>
+
 <nav>
 
     <section>
@@ -5,6 +38,7 @@
         {% if user.is_superuser %}
             <a href="{% url 'admin:index' %}">admin</a>
             <a href="/admin/uwsgi">uwsgi</a>
+            <a href="{% url 'report:tan' %}">tan</a>
         {% endif %}
         <a href="{% url 'report:index' %}">reports</a>
     </section>
