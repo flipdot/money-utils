@@ -10,7 +10,7 @@ from bank.models import TanRequest
 
 
 class LoadTXsJob(CronJobBase):
-    schedule = Schedule(run_every_mins=5)
+    schedule = Schedule(run_every_mins=20)
     code = 'bank.load_txs_job'
 
     def do(self):
