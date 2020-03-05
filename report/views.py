@@ -103,7 +103,7 @@ def member(request: HttpRequest):
         legend="Count of Members (paid fees)"
     )
 
-    p1.extra_y_ranges = {"fee_range": Range1d(start=0, end=df_fees['fee'].max() + 5)}
+    p1.extra_y_ranges = {"fee_range": Range1d(start=0, end=df_fees['fee'].astype(float).max() + 5)}
     p1.add_layout(LinearAxis(y_range_name="fee_range"), 'right')
     p1.step(
         x='month',
