@@ -37,6 +37,9 @@ class FeeEntry(Base):
     def replace(self, **kwargs):
         for key in ['member_id', 'month', 'tx_id', 'fee', 'pay_interval']:
             if kwargs.get(key, None) is None:
-                kwargs[key] = self.__dict__[key]
+                if key not in self.__dict__ and key == 'tx_id':
+                    kwargs[key] = self.tx.id
+                else:
+                    kwargs[key] = self.__dict__[key]
         return FeeEntry(**kwargs)
 
