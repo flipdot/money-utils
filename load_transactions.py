@@ -96,17 +96,28 @@ def load_transactions(session, last_load: Status, tan_callback):
     session.add(last_load)
 
 
+def ask_for_tan(conn, response, tan_callback):
+    logging.info("Calling tan callback for %s", response)
+    tan = tan_callback(response)
+    if not tan:
+        logging.error("No TAN got, aborting")
+        return
+    return conn.send_tan(tan)
+
+
 def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date, tan_callback):
     global error
     logging.info("Fetching TXs from %s to %s", fetch_from, fetch_to)
-    conn, acc = hbci_client.get_account()
+
     error = False
     def log_callback(_, response):
         if response.code[0] not in ('0', '1', '3'): # 0&1 info, 3 warning, rest err
             global error
             error = True
-
+    
+    conn, acc = hbci_client.get_account(ask_for_tan)
     conn.add_response_callback(log_callback)
+    
     txs = conn.get_transactions(acc, fetch_from, fetch_to)
 
     while isinstance(txs, NeedTANResponse):

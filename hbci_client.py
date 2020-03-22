@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from pprint import pformat
 
 from fints.client import *
+from fints.utils import minimal_interactive_cli_bootstrap
 
 import config
 
@@ -42,20 +43,26 @@ def get_connection():
         pin=pin,
         server=config.fints_url,
         product_id=config.product_id,
-        mode=FinTSClientMode.INTERACTIVE,
+        #mode=FinTSClientMode.INTERACTIVE,
         product_version=version
     )
-    conn._need_twostep_tan_for_segment = lambda _: True
     conn.fetch_tan_mechanisms()
-    #conn.set_tan_mechanism('910')
-    #conn.set_tan_mechanism('942')   # eg for mobiletan at gls
+    conn.set_tan_mechanism('910')
+    #minimal_interactive_cli_bootstrap(conn)
+    #conn._need_twostep_tan_for_segment = lambda _: True
 
     return conn
 
-def get_account():
+@contextmanager
+#TODO https://python-fints.readthedocs.io/en/latest/trouble.html
+def get_account(tan_callback):
     global accounts
     if not accounts:
         conn = get_connection()
+        with conn:
+            if conn.init_tan_response:
+                tan_callback(conn, conn.init_tan_response)
+            dialog_data = conn.pause_dialog()
         accounts = conn.get_sepa_accounts()
     for acc in accounts:
         if acc.iban == config.iban:
