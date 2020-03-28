@@ -100,6 +100,7 @@ def txs_by_member(session: Session, member: Member) -> Query:
         .filter(Transaction.purpose.notilike("drinks %")) \
         .filter(Transaction.purpose.notilike("%Getraenke")) \
         .filter(Transaction.purpose.notilike("%Einkauf%")) \
+        .filter(Transaction.purpose.notilike("Baegeldeinzahlung%")) \
         .filter(or_(Transaction.type == TxType.MEMBER_FEE, Transaction.type.is_(None)))\
         .filter(Transaction.amount > 0)
 
@@ -257,7 +258,7 @@ def split_into_entries(member, session, tx) -> Iterable[FeeEntry]:
     if months:
         return split_fee_command(tx, session, entry, months)
     elif tx.amount in fee_amounts:
-        logging.info('fee entry: %s %s', entry.month, tx)
+        logging.info('fee entry amount: %s %s', entry.month, tx)
         yield entry
     elif tx.amount / 12 == member.fee:
         return split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
@@ -269,7 +270,7 @@ def split_into_entries(member, session, tx) -> Iterable[FeeEntry]:
         return split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
     else:
         logging.warning("Fee entry unclear! Assuming monthly for now")
-        logging.info('fee entry: %s %s', entry.month, tx)
+        logging.info('fee entry unclear: %s %s', entry.month, tx)
         yield entry
 
 
@@ -280,7 +281,7 @@ def split_fee_months(entry, session, num_months, pay_interval, tx):
         month_replaced = entry.month + relativedelta(months=m)
         month_replaced = month_replaced.replace(day=1)
         m_entry = entry.replace(month=month_replaced)
-        logging.info('fee entry: %s (%.2f) %s', m_entry.month, m_entry.fee, tx)
+        logging.info('fee entry split_fee_months: %s (%.2f) %s', m_entry.month, m_entry.fee, tx)
         yield m_entry
 
 
@@ -335,8 +336,8 @@ def split_fee_command(tx, session, entry, months):
     entry.pay_interval = PayInterval.VARIABLE
     for month in months:
         m_entry = entry.replace(month=month)
-        logging.info('fee entry: %s %s', m_entry.month, tx)
-        session.add(m_entry)
+        logging.info('fee entry split_fee_command: %s %s', m_entry, tx)
+        yield m_entry
 
 
 def fee_changed(session, member, month_sum, month, txs):
