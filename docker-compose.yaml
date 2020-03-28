@@ -10,3 +10,4 @@ services:
     volumes:
       - ./data.docker:/app/data
       - ./config.py:/app/config.py:ro
+    restart: unless-stopped
