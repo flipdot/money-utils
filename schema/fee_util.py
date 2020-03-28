@@ -28,5 +28,14 @@ class AllFee(enum.Enum):
 common_fee_amounts = {f.value: f.name for f in CommonFee}
 fee_amounts = {f.value: f.name for f in AllFee}
 
-month_regex_ymd = re.compile(r'(?:^|\s)(?P<year>\d{4})-(?P<month>\d{2})(?=$|\s)')
-month_regex_ym = re.compile(r'(?:^|\s)(?P<month>\d{2})/(?P<year>\d{2})(?=$|\s)')
+d = lambda name, num: r'(?P<%s>\d{%d})' % (name, num)
+
+space_or_start = r'(?:^|\s)'
+space_or_end = r'(?=$|\s)'
+
+iso_ym = lambda suffix: d('year'+suffix, 4) + r'-' + d('month'+suffix, 2)
+
+month_regex_ymd_range = re.compile(space_or_start + iso_ym('_start') + r'\s-\s'+ iso_ym('_end') + space_or_end)
+
+month_regex_ymd = re.compile(space_or_start + iso_ym('') + space_or_end)
+month_regex_ym = re.compile(space_or_start + d('month', 2) + r'/' + d('year', 4) + space_or_end)

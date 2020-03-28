@@ -98,6 +98,8 @@ def txs_by_member(session: Session, member: Member) -> Query:
         .filter(Transaction.purpose.notilike("spende %")) \
         .filter(Transaction.purpose.notilike("spende")) \
         .filter(Transaction.purpose.notilike("drinks %")) \
+        .filter(Transaction.purpose.notilike("%Getraenke")) \
+        .filter(Transaction.purpose.notilike("%Einkauf%")) \
         .filter(or_(Transaction.type == TxType.MEMBER_FEE, Transaction.type.is_(None)))\
         .filter(Transaction.amount > 0)
 
@@ -238,7 +240,8 @@ def analyze_fees(member, today, session: Session, all_txs: Query):
             session.commit()
         except IntegrityError as e:
             session.rollback()
-            logging.warning("Entries colliding! %s", entries)
+            logging.warning("Entries colliding! %s:", entries)
+            logging.info("  Why: %s", e)
             delete_entries = session.query(FeeEntry).filter_by(member_id=member.id)\
                 .filter(FeeEntry.month.in_([entry.month for entry in entries]))
             logging.warning("Deleting these: %s", delete_entries.all())
@@ -249,8 +252,10 @@ def split_into_entries(member, session, tx) -> Iterable[FeeEntry]:
     month = month.replace(day=1)
     entry = FeeEntry(member_id=member.id, month=month, tx=tx, fee=tx.amount,
         pay_interval=PayInterval.MONTHLY)
-    if month_command(tx):
-        return split_fee_command(tx, session, entry)
+    
+    months = month_command(tx)
+    if months:
+        return split_fee_command(tx, session, entry, months)
     elif tx.amount in fee_amounts:
         logging.info('fee entry: %s %s', entry.month, tx)
         yield entry
@@ -294,21 +299,25 @@ def month_command(tx):
 
 
 def month_command_ymd(text):
+    matches = list(month_regex_ymd_range.finditer(text))
+    if matches:
+        for match in matches:
+            start = date(int(match.group('year_start')), int(match.group('month_start')), 1)
+            end = date(int(match.group('year_end')), int(match.group('month_end')), 1)
+            for d in rrule(MONTHLY, dtstart=start, until=end):
+                yield d.date()
+        return
+    
     matches = list(month_regex_ymd.finditer(text))
     if matches:
         for match in matches:
-            year = int(match.group('year'))
-            month = int(match.group('month'))
-            d = date(year, month, 1)
-            yield d
+            yield date(int(match.group('year')), int(match.group('month')), 1)
         return
+
     matches = list(month_regex_ym.finditer(text))
     if matches:
         for match in matches:
-            year = int(match.group('year'))
-            month = int(match.group('month'))
-            d = date(2000 + year, month, 1)
-            yield d
+            yield date(2000 + int(match.group('year')), int(match.group('month')), 1)
         return
     month_names_or = "|".join(util.months_german.keys())
     matches = list(re.finditer(r'(?:^|\s)(?P<month>%s) ?(?P<year>\d{4})(?=$|\s)' % month_names_or, text))
@@ -320,8 +329,7 @@ def month_command_ymd(text):
 
 
 
-def split_fee_command(tx, session, entry):
-    months = month_command(tx)
+def split_fee_command(tx, session, entry, months):
     logging.info("Tx matched fee commands for months %s", months)
     entry.fee /= len(months)
     entry.pay_interval = PayInterval.VARIABLE
