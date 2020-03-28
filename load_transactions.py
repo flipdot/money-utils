@@ -34,7 +34,7 @@ def main(args):
 
     get_transactions(True)
 
-def get_transactions(force=False, tan_callback=None):
+def get_transactions(force=False, tan_callback=hbci_client.terminal_tan_callback):
     with db.tx() as session:
         last_load: Status = session.query(Status)\
             .filter_by(key=LAST_LOAD)\
@@ -78,6 +78,8 @@ def load_transactions(session, last_load: Status, tan_callback):
             return
         if fetch_to >= now:
             break
+        fetch_from = fetch_to
+        session.commit()
 
     last_load.value_dt = utcnow
     logging.info("last load set to %s", last_load)
@@ -98,8 +100,8 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date, ta
         conn.add_response_callback(log_callback)
         txs = conn.get_transactions(acc, fetch_from, fetch_to)
 
-        if isinstance(txs, NeedTANResponse):
-            logging.info("Calling tan callback for %s", txs)
+        while isinstance(txs, NeedTANResponse):
+            logging.info("Calling tan callback for TXs %s", txs)
             tan = tan_callback(txs)
             if not tan:
                 logging.error("No TAN got, aborting")

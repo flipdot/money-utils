@@ -13,7 +13,10 @@ import util
 from schema.fee_entry import FeeEntry
 from schema.member import Member
 
-logging.basicConfig(level=logging.INFO, format="%(levelname) 7s %(message)s")
+import config
+
+logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
+    format="%(levelname) 7s %(message)s")
 
 
 def main(args):
