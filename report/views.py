@@ -145,15 +145,6 @@ def recharges(request: HttpRequest):
     all = get_recharges()
     return JsonResponse(all)
 
-def get_request():
-    requests = TanRequest.objects\
-        .filter(expired=False)\
-        .filter(answer=None)\
-        .order_by('-date')
-    #print("requests:", requests)
-    if requests:
-        return requests[0]
-
 def admin_tan(request: HttpRequest):
     if not request.user.is_superuser:
         return "404 Not Found"
@@ -161,19 +152,16 @@ def admin_tan(request: HttpRequest):
     if 'tan' in request.POST:
         tan = request.POST['tan']
         date = request.POST['date']
-        print("got date:", date, "tan:", tan)
         tan = re.sub(r'[^a-zA-Z0-9]', "", tan)
-        print("Got TAN:", tan)
         tan_request = TanRequest.objects.get(pk=datetime.fromtimestamp(float(date), tz=timezone.utc))
         if tan_request.answer or tan_request.expired:
             return render(request, 'admin_tan.html', {'error': "TAN request expired"})
-        print("matched:", tan_request)
         tan_request.answer = tan
         tan_request.save()
         
         return render(request, 'admin_tan.html', {'tan': tan})
 
-    tan_request = get_request()
+    tan_request = TanRequest.active_request()
     return render(request, 'admin_tan.html', {
         'tan_request': tan_request,
         'id': tan_request.date.timestamp() if tan_request else None
