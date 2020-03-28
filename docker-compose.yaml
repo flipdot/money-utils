@@ -1,0 +1,12 @@
+version: "3"
+services:
+  money:
+    build:
+      context: .
+      args:
+        - SOURCE_COMMIT
+    ports:
+      - 80:5002
+    volumes:
+      - ./data.docker:/app/data
+      - ./config.py:/app/config.py:ro

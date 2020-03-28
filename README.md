@@ -2,19 +2,23 @@
 
 Monitors money transfers to an account and filters them according to various patterns to report information.
 
-## Setup
+## Developer Setup
+
+> **Note**:  
+> If all you want is run the service, please head down to the
+> **[Deployment](#deployment)** section.
+
 - If you're on Debian, you will need some more packages:
-```bash
-apt install python3-dev build-essential
-```
+
+  ```bash
+  apt install python3-dev build-essential
+  ```
 
 - Enable lingering services for your user:
-```bash
-sudo loginctl enable-linger $USER
-```
 
-- latest psd2 branch:
-  - `pip install -U "git+https://github.com/raphaelm/python-fints.git@psd2#egg=fints"`
+  ```bash
+  sudo loginctl enable-linger $USER
+  ```
 
 - Copy `config.example.py` to `config.py` and customize contents according to your likings.
   - insert your account information (`blz`, `user`, `pin`, `iban`)
@@ -29,56 +33,65 @@ The following script will:
 - Make a virtualenv and install dependencies from [requirements.txt](requirements.txt)
 - Setup a systemd-user-service `money.service`
 
-```bash
-./setup.sh
-```
+  ```bash
+  ./setup.sh
+  ```
 
 - Make a database:
-```bash
-./manage.py migrate
-./manage.py createsuperuser
-```
+
+  ```bash
+  ./manage.py migrate
+  ./manage.py createsuperuser
+  ```
 
 - Run Cron jobs to import TXs
   - this will:
     - import transactions from your bank
     - analyze member fees
-```bash
-./manage.py runcrons
-```
+
+  ```bash
+  ./manage.py runcrons
+  ```
 
 - Start server:
-```bash
-./manage.py runserver
 
-# or, enable and start the systemd service:
-systemctl --user enable --now money
-```
+  ```bash
+  ./manage.py runserver
+
+  # or, enable and start the systemd service:
+  systemctl --user enable --now money
+  ```
 
 - go to http://localhost:5002/ and enjoy the stats!
 
+Deployment in dev setup:
+
+- Edit `uwsgi.ini`
+
+- Run:
+
+  ```bash
+  ./manage.py collectstatic
+  ./webserver
+  ```
+
 ## Deployment
 
-- Edit  uwsgi.ini
+Do these steps:
 
 ```bash
-./manage.py collectstatic
-./webserver
-```
+export SOURCE_COMMIT=$(git describe --always --no-abbrev)
+docker-compose build
 
-### Docker
-
-```bash
-docker build -t money-utils --build-arg SOURCE_COMMIT=$(git describe --always --no-abbrev) .
-
-docker run -it --rm -p 80:5002 -v $(pwd)/config.py:/app/config.py:ro -v $(pwd)/data.docker/:/app/data --name money-utils money-utils
+docker-compose up
 
 ## in another window:
-docker exec -it money-utils ./manage.py migrate
-docker exec -it money-utils ./manage.py createsuperuser
+docker-compose exec money ./manage.py migrate
+docker-compose exec money ./manage.py cratesuperuser
 ```
 
 ## Member Management
+
 Once the server is running, go to http://localhost:8000/admin.
 Log in, and click on "Members".
 Add some members. The only fields you will have to fill out:
@@ -94,7 +107,8 @@ All the other fields will be filled by the analysis.
 
 After adding some members, do `./manage.py runcrons` again to analyze their fees.
 
-# License
+## License
+
 GPLv3. Other licenses available upon request.
 
 ---
