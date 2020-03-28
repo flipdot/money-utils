@@ -8,6 +8,7 @@ import load_transactions
 import members
 from bank.models import TanRequest
 
+TIMEOUT_MINS = 30
 
 class LoadTXsJob(CronJobBase):
     schedule = Schedule(run_every_mins=20)
@@ -20,7 +21,6 @@ class LoadTXsJob(CronJobBase):
         members.main([])
 
     def tan_callback(self, res):
-
         request = TanRequest()
         request.challenge = res.challenge
         if getattr(res, 'challenge_hhduc', None):
@@ -28,13 +28,13 @@ class LoadTXsJob(CronJobBase):
         request.save()
 
         start_time = time.monotonic()
-        while (not request.answer) and (time.monotonic() - start_time < 60 * 5):
+        while (not request.answer) and (time.monotonic() - start_time < 60 * TIMEOUT_MINS):
             request.refresh_from_db()
             if request.answer:
                 logging.info("Got TAN answer %s %s", request, request.answer)
                 return request.answer
             time.sleep(1)
-        logging.warning("TAN request timed out after 5 mins.")
+        logging.warning("TAN request timed out after %s mins.", TIMEOUT_MINS)
         request.expired = True
         request.save()
         return None

@@ -33,25 +33,11 @@ def main(args):
 
     get_transactions(True)
 
-
-def terminal_tan_callback(res):
-    logging.warning("Need TAN for transactions: %s", res.challenge)
-    if getattr(res, 'challenge_hhduc', None):
-        try:
-            terminal_flicker_unix(res.challenge_hhduc)
-        except KeyboardInterrupt as e:
-            logging.exception("interrupt", e)
-            pass
-    while True:
-        tan = input('Please enter TAN:')
-        if tan:
-            return tan
-
-
-def get_transactions(force=False, tan_callback=terminal_tan_callback):
+def get_transactions(force=False, tan_callback=None):
     with db.tx() as session:
-        last_load: Status = session.query(Status).filter_by(
-            key=LAST_LOAD).first()
+        last_load: Status = session.query(Status)\
+            .filter_by(key=LAST_LOAD)\
+            .first()
         if last_load:
             logging.info("Last load was at %s", last_load.value_dt)
             if not force and last_load.value_dt + load_interval_max > datetime.utcnow():
@@ -93,29 +79,31 @@ def load_transactions(session, last_load: Status, tan_callback):
             break
 
     last_load.value_dt = utcnow
-    session.add(last_load)
+    logging.info("last load set to %s", last_load)
+    session.merge(last_load)
 
 
 def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date, tan_callback):
     global error
     logging.info("Fetching TXs from %s to %s", fetch_from, fetch_to)
-    conn, acc = hbci_client.get_account()
     error = False
-    def log_callback(_, response):
-        if response.code[0] not in ('0', '1', '3'): # 0&1 info, 3 warning, rest err
-            global error
-            error = True
+    
+    with hbci_client.get_account(tan_callback) as (conn, acc):
+        def log_callback(_, response):
+            if response.code[0] not in ('0', '1', '3'): # 0&1 info, 3 warning, rest err
+                global error
+                error = True
 
-    conn.add_response_callback(log_callback)
-    txs = conn.get_transactions(acc, fetch_from, fetch_to)
+        conn.add_response_callback(log_callback)
+        txs = conn.get_transactions(acc, fetch_from, fetch_to)
 
-    while isinstance(txs, NeedTANResponse):
-        logging.info("Calling tan callback for %s", txs)
-        tan = tan_callback(txs)
-        if not tan:
-            logging.error("No TAN got, aborting")
-            return
-        txs = conn.send_tan(txs, tan)
+        if isinstance(txs, NeedTANResponse):
+            logging.info("Calling tan callback for %s", txs)
+            tan = tan_callback(txs)
+            if not tan:
+                logging.error("No TAN got, aborting")
+                return
+            txs = conn.send_tan(txs, tan)
 
     logging.info("got txs: len: %s, type: %s, %s", len(txs), type(txs), txs)
     new_txs = []
@@ -138,6 +126,7 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date, ta
 
     for tx in new_txs:
         session.merge(tx)
+    return True
 
 
 if __name__ == "__main__":

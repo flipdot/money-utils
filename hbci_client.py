@@ -7,6 +7,9 @@ from pprint import pformat
 from fints.client import *
 
 import config
+from fints.hhd.flicker import terminal_flicker_unix
+import atexit
+import os
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("fints.dialog").setLevel(logging.DEBUG)
@@ -18,8 +21,20 @@ accounts = None
 version = subprocess.check_output(["git", "describe", "--abbrev=5", "--always"]).decode('utf8').strip()
 version = version[:5]
 
+def terminal_tan_callback(response):
+    logging.warning("Need TAN for transactions: %s", response.challenge)
+    if getattr(response, 'challenge_hhduc', None):
+        try:
+            terminal_flicker_unix(response.challenge_hhduc)
+        except KeyboardInterrupt as e:
+            logging.exception("interrupt", e)
+            pass
+    while True:
+        tan = input('Please enter TAN:')
+        if tan:
+            return tan
 
-def get_connection():
+def get_connection(ask_for_tan=terminal_tan_callback):
     logging.getLogger('fints').setLevel(logging.INFO)
     logging.getLogger('urllib3.connectionpool').setLevel(logging.INFO)
     logging.getLogger('mt940.tags').setLevel(logging.INFO)
@@ -27,15 +42,23 @@ def get_connection():
     global pin, conn
     if conn:
         try:
-            conn.get_sepa_accounts()
             return conn
-        except:
+        except Exception as e:
             conn = None
+            raise e
 
     if not pin:
         pin = config.pin
     if not pin:
         pin = getpass.getpass("Please enter PIN: ")
+
+    data = None
+    try:
+        with open("data/fints_state.bin", "rb") as fd:
+            data = fd.read()
+    except IOError as e:
+        print("State not recovered: ", e)
+
     conn = FinTS3PinTanClient(
         bank_identifier=config.blz,
         user_id=config.user,
@@ -43,25 +66,48 @@ def get_connection():
         server=config.fints_url,
         product_id=config.product_id,
         mode=FinTSClientMode.INTERACTIVE,
-        product_version=version
+        product_version=version,
+        from_data=data
     )
-    conn._need_twostep_tan_for_segment = lambda _: True
-    conn.fetch_tan_mechanisms()
+    #conn._need_twostep_tan_for_segment = lambda _: True
+    #conn.fetch_tan_mechanisms()
     #conn.set_tan_mechanism('910')
     #conn.set_tan_mechanism('942')   # eg for mobiletan at gls
 
-    return conn
+    if conn.init_tan_response:
+        tan = ask_for_tan(conn.init_tan_response)
+        conn.send_tan(conn.init_tan_response, tan)
 
-def get_account():
-    global accounts
-    if not accounts:
-        conn = get_connection()
-        accounts = conn.get_sepa_accounts()
-    for acc in accounts:
-        if acc.iban == config.iban:
-            logging.info("Got account %s.", pformat(acc))
-            return conn, acc
-    raise Exception("IBAN %s not found (got %s)", config.iban, pformat(accounts))
+    atexit.register(save_conn)
+    return conn
+    
+def save_conn():
+    global conn
+    if conn:
+        data = conn.deconstruct(True)
+        if not os.path.exists("data"):
+            os.makedirs("data")
+        with open("data/fints_state.bin", "wb") as fd:
+            fd.write(data)
+
+@contextmanager
+def get_account(ask_for_tan=None):
+    if not ask_for_tan:
+        ask_for_tan = terminal_tan_callback
+    conn = get_connection(ask_for_tan)
+    with conn:
+        global accounts
+        if not accounts:
+            accounts = conn.get_sepa_accounts()
+        if isinstance(accounts, NeedTANResponse):
+            tan = ask_for_tan(accounts)
+            accounts = conn.send_tan(accounts, tan)
+        for acc in accounts:
+            if acc.iban == config.iban:
+                logging.info("Got account %s.", pformat(acc))
+                yield conn, acc
+                return
+        raise Exception("IBAN %s not found (got %s)" % config.iban, pformat(accounts))
 
 if __name__ == "__main__":
     account = get_account()
