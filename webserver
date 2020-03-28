@@ -13,6 +13,10 @@ config_file=uwsgi.ini
 
 (set -eu
   sleep 10
+  
+  # check whether backend is available
+  curl -s "http://localhost:5002" >/dev/null
+  
   while true; do
     ./manage.py runcrons
     sleep 60
