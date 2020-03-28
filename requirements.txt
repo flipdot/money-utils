@@ -10,7 +10,7 @@ django-cron==0.5.1
 django-request-logging==0.7.0
 django-uwsgi==0.2.2
 elementpath==1.2.1
-fints==2.2.0
+fints==3.0.0
 Flask==1.1.1
 Flask-Compress==1.4.0
 fuzzywuzzy==0.17.0
