@@ -15,6 +15,7 @@
         <input type="submit"/>
     </form>
 {% else %}
+    <meta http-equiv="refresh" content="5">
     {% if tan %}
         <p>OK. Processing TAN <b>{{ tan }}</b>.</p>
     {% elif error %}

@@ -160,6 +160,9 @@ def admin_tan(request: HttpRequest):
     if not request.user.is_superuser:
         return HttpResponseRedirect('/admin/login')
 
+    if 'action' in request.POST and request.POST['action'] == 'number':
+        return JsonResponse({'number': TanRequest.active_requests().count()})
+
     if 'tan' in request.POST:
         tan = request.POST['tan']
         date = request.POST['date']
