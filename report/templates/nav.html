@@ -39,8 +39,9 @@
             <a href="{% url 'admin:index' %}">admin</a>
             <a href="/admin/uwsgi">uwsgi</a>
             <a href="{% url 'report:tan' %}">tan</a>
+        {% else %}
+            <a href="{% url 'admin:login' %}">admin</a>
         {% endif %}
-        <a href="{% url 'report:index' %}">reports</a>
     </section>
 
     <section>
@@ -51,6 +52,9 @@
 
     <section>
         <p class="section-header">members</p>
-        <a href="{% url 'report:member' %}">Members per month</a>
+        <a href="{% url 'report:members_per_month' %}">Members per month</a>
+        {% if user.is_superuser %}
+            <a href="{% url 'report:member_report' %}">Member Report</a>
+        {% endif %}
     </section>
 </nav>

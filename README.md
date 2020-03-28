@@ -132,7 +132,7 @@ loads new transactions from the bank.
 
 performs member fee analysis.
 
-## [report.py](report.py)
+## [member_report.py](member_report.py)
 
 displays an oldschool ASCII report of paid member fees in the last 12 months.
 

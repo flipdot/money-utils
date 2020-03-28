@@ -5,7 +5,7 @@ from bokeh import embed, resources
 from bokeh.models import Range1d, LinearAxis, LabelSet, ColumnDataSource
 from bokeh.plotting import figure, Figure
 from django.db.models import Q, Count, Avg
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest, HttpResponseNotFound, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.datetime_safe import datetime
@@ -14,12 +14,13 @@ from django.utils.safestring import mark_safe
 from bank.models import TanRequest
 from report.get_recharges import get_recharges
 from .models import Transaction, FeeEntry
+from io import StringIO
+import member_report
+from django.urls import reverse
 
 
 def index(request):
-    context = {
-    }
-    return render(request, 'index.html', context)
+    return render(request, 'index.html', {})
 
 
 def drinks(request: HttpRequest):
@@ -72,7 +73,7 @@ def drinks_transactions():
     return tx
 
 
-def member(request: HttpRequest):
+def members_per_month(request: HttpRequest):
     members_per_month = FeeEntry.objects.values('month').order_by('month')\
         .annotate(count=Count('month'))
     df_members = pandas.DataFrame.from_dict(members_per_month)
@@ -140,6 +141,16 @@ def member(request: HttpRequest):
 
     return render(request, 'graph.html', {'html': mark_safe(html)})
 
+
+def member_report_view(request: HttpRequest):
+    if not request.user.is_superuser:
+        return HttpResponseRedirect('/admin/login')
+        
+    output = StringIO()
+    member_report.main([], output)
+    output = output.getvalue()
+    return render(request, 'member_report.html', {'report': mark_safe(output)})
+
 #@basicauth(realm="Parole?")
 def recharges(request: HttpRequest):
     all = get_recharges()
@@ -147,7 +158,7 @@ def recharges(request: HttpRequest):
 
 def admin_tan(request: HttpRequest):
     if not request.user.is_superuser:
-        return "404 Not Found"
+        return HttpResponseRedirect('/admin/login')
 
     if 'tan' in request.POST:
         tan = request.POST['tan']

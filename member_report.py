@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
     format="%(levelname) 7s %(message)s")
 
 
-def main(args):
+def main(args, to=sys.stdout):
     if '--debug' in args:
         logging.getLogger('').setLevel(logging.DEBUG)
 
@@ -33,7 +33,7 @@ def main(args):
     with db.tx() as session:
         members = session.query(Member) \
             .order_by(Member.last_name, Member.first_name)
-        members_table(session, members, start_month, end_month)
+        members_table(session, members, start_month, end_month, to)
 
 
 
