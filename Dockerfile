@@ -1,4 +1,4 @@
-FROM python:3.7
+FROM python:3.8
 
 RUN mkdir /install
 WORKDIR /install
@@ -17,7 +17,10 @@ RUN mkdir -p /app/data \
 	&& sed -i '/home=/d' uwsgi.ini \
 	&& sed -i "s/version = subprocess.*/version = '${SOURCE_COMMIT}'/" /app/hbci_client.py
 
-RUN cp config.example.py config.py && ./manage.py collectstatic -l -c --noinput && rm config.py
+RUN cp config.example.py config.py && \
+	./manage.py collectstatic -c --noinput && \
+	gzip -r -k -9 /app/static && \
+	rm config.py
 USER app
 
 EXPOSE 5002
