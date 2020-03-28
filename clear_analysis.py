@@ -3,8 +3,10 @@ import sys
 
 import db
 from schema.transaction import Transaction
+import config
 
-logging.basicConfig(level=logging.INFO, format="%(levelname) 7s %(message)s")
+logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
+    format="%(levelname) 7s %(message)s")
 
 
 def main(args):

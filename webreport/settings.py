@@ -17,7 +17,6 @@ import config
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -30,9 +29,12 @@ DEBUG = not os.getenv('SECRET_KEY', False)
 
 ALLOWED_HOSTS = []
 
+#ADMINS = [('User', 'user@example.com')]
+FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[money-utils cron] "
+
+APPEND_SLASH = True
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -51,6 +53,7 @@ INSTALLED_APPS = [
 
 CRON_CLASSES = [
     "bank.load_txs.LoadTXsJob",
+    "django_cron.cron.FailedRunsNotificationCronJob"
 ]
 
 MIDDLEWARE = [
@@ -91,6 +94,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': config.db_path,
+        'OPTIONS': {
+            'timeout': 30,
+        }
     }
 }
 

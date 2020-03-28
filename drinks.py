@@ -20,8 +20,7 @@ load_interval_max = timedelta(minutes=config.load_interval_minutes)
 drinks_regex = re.compile(r'^drinks?\s+(?P<uid>\d+)(\s+(?P<info>.*))?$', re.I)
 #drinks_regex = re.compile(r'^MIETE?\s+(?P<info>.*)\s+(?P<uid>\d+)$', re.I)
 
-
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO)
 
 def tx_id(tx):
     # hash together as much as possible

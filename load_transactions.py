@@ -22,7 +22,8 @@ MAX_LOAD_DAYS = 6 * 30
 # grace time of days to fetch extra
 LOAD_BACK_DAYS = 4
 
-logging.basicConfig(level=logging.INFO, format="%(levelname) 7s %(module)s - %(message)s")
+logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
+    format="%(levelname) 7s %(module)s - %(message)s")
 
 def main(args):
     if '--debug' in args:

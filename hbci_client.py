@@ -11,7 +11,7 @@ from fints.hhd.flicker import terminal_flicker_unix
 import atexit
 import os
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO)
 logging.getLogger("fints.dialog").setLevel(logging.DEBUG)
 
 pin = None
@@ -57,7 +57,7 @@ def get_connection(ask_for_tan=terminal_tan_callback):
         with open("data/fints_state.bin", "rb") as fd:
             data = fd.read()
     except IOError as e:
-        print("State not recovered: ", e)
+        logging.info("State not recovered: %s", e)
 
     conn = FinTS3PinTanClient(
         bank_identifier=config.blz,
@@ -75,15 +75,18 @@ def get_connection(ask_for_tan=terminal_tan_callback):
     #conn.set_tan_mechanism('942')   # eg for mobiletan at gls
 
     if conn.init_tan_response:
+        logging.info("Calling tan callback for init_tan_response %s", conn.init_tan_response)
         tan = ask_for_tan(conn.init_tan_response)
         conn.send_tan(conn.init_tan_response, tan)
-
+    
+    logging.info("registering shutdown hook")
     atexit.register(save_conn)
     return conn
     
 def save_conn():
     global conn
     if conn:
+        logging.info("registering atexit hook")
         data = conn.deconstruct(True)
         if not os.path.exists("data"):
             os.makedirs("data")
@@ -100,6 +103,7 @@ def get_account(ask_for_tan=None):
         if not accounts:
             accounts = conn.get_sepa_accounts()
         if isinstance(accounts, NeedTANResponse):
+            logging.info("Calling tan callback for get_accounts %s", accounts)
             tan = ask_for_tan(accounts)
             accounts = conn.send_tan(accounts, tan)
         for acc in accounts:

@@ -20,11 +20,13 @@ import config
 import db
 import util
 from schema.fee_entry import FeeEntry
-from schema.fee_util import fee_amounts, PayInterval, common_fee_amounts, month_regex_ymd, month_regex_ym
+from schema.fee_util import fee_amounts, PayInterval, common_fee_amounts, month_regex_ymd, month_regex_ym, month_regex_ymd_range
 from schema.member import Member
 from schema.transaction import Transaction, TxType
+from dateutil.rrule import MONTHLY, rrule
 
-logging.basicConfig(level=logging.INFO, format="%(levelname) 7s %(message)s")
+logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
+    format="%(levelname) 7s %(message)s")
 
 def main(args):
     if '--debug' in args:
