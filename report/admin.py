@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import *
+from .filters import *
 from django.utils.html import format_html
 
 @admin.register(Transaction)
@@ -21,12 +22,14 @@ class MemberAdmin(admin.ModelAdmin):
     
     list_display = ('id', 'is_member', 'nick', 'first_name', 'last_name', 'email', 'entry_date', 'exit_date',
         'pay_interval', 'last_fee', 'fee')
+    list_filter = (IsMemberFilter, 'entry_date', 'exit_date',
+        'pay_interval', 'last_fee', 'fee')
     
     is_member.boolean = True
-    
+    is_member.admin_order_field = 'exit_date'
     
     date_hierarchy = 'entry_date'
-    
+    ordering = ('id',)
 
 @admin.register(Status)
 class StatusAdmin(admin.ModelAdmin):
@@ -36,3 +39,6 @@ class StatusAdmin(admin.ModelAdmin):
 class FeeEntryAdmin(admin.ModelAdmin):
     list_display = ('id', 'member', 'month', 'fee', 'pay_interval', 'detect_method', 'tx')
     date_hierarchy = 'month'
+    
+    list_filter = ('detect_method', 'month', 'fee', 'pay_interval',  'member')
+    

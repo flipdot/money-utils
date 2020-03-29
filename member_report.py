@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
     format="%(levelname) 7s %(message)s")
 
 
-def main(args, to=sys.stdout):
+def main(args, to=sys.stdout, months=12):
     if '--debug' in args:
         logging.getLogger('').setLevel(logging.DEBUG)
 
@@ -28,7 +28,7 @@ def main(args, to=sys.stdout):
     end_month = date.today()
     end_month = end_month.replace(day=1)
 
-    start_month = end_month - relativedelta(months=12)
+    start_month = end_month - relativedelta(months=months)
 
     with db.tx() as session:
         members = session.query(Member) \

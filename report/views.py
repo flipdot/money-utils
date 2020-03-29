@@ -147,7 +147,7 @@ def member_report_view(request: HttpRequest):
         return HttpResponseRedirect('/admin/login')
         
     output = StringIO()
-    member_report.main([], output)
+    member_report.main([], to=output, months=36)
     output = output.getvalue()
     return render(request, 'member_report.html', {'report': mark_safe(output)})
 
