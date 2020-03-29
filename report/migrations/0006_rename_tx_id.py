@@ -7,7 +7,7 @@ import schema.fee_util
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('report', '0005_auto_20200329_1618 copy'),
+        ('report', '0005_auto_20200329_1618'),
     ]
 
     operations = [
