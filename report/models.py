@@ -32,7 +32,7 @@ class FeeEntry(models.Model):
 
     tx = models.ForeignKey('Transaction', on_delete=models.DO_NOTHING)
     fee = models.DecimalField(decimal_places=2, max_digits=10)
-    pay_interval = models.CharField(max_length=9)
+    pay_interval = models.TextField(choices=choice_from_enum(PayInterval))
     
     detect_method = models.TextField(
         choices=choice_from_enum(DetectMethod),
@@ -47,6 +47,11 @@ class FeeEntry(models.Model):
     def save(self, *args, **kwargs):
         self.id = "{}|{}".format(self.member.id, self.month)
         super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return f'Fee {self.month:%Y-%m} {self.member.id:3} ' +\
+            f'detect={self.detect_method:10} interval={self.pay_interval:10} ' + \
+            f'{self.tx.id[:8]}'
 
 
 class Member(models.Model):

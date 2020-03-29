@@ -30,6 +30,7 @@ class DetectMethod(enum.IntEnum):
     
     LAST_FEE = 20
     MULTIPLE_OF_FEE = 10
+    MULTIPLE_OF_COMMON_FEE = 5
 
     FALLBACK = 0
 
