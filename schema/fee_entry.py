@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Numeric, Date, Enum, ForeignKey,
 from sqlalchemy.orm import relationship
 
 from db import Base
-from schema.fee_util import PayInterval
+from schema.fee_util import DetectMethod, PayInterval
 from schema.transaction import Transaction
 
 
@@ -17,7 +17,11 @@ class FeeEntry(Base):
 
     tx_id = Column(String(), ForeignKey('transaction.tx_id'), nullable=False)
     fee = Column(Numeric(), nullable=False)
-    pay_interval = Column(Enum(PayInterval), nullable=False, default=PayInterval.MONTHLY)
+    pay_interval = Column(Enum(PayInterval), nullable=False,
+        default=PayInterval.MONTHLY)
+
+    detect_method = Column(Enum(DetectMethod), nullable=False,
+        default=DetectMethod.FALLBACK)
 
     # --- Relationships ---
 

@@ -44,9 +44,10 @@ def init(debug=False):
     if debug:
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-    with tx() as session:
-        import schema
-        from schema import member, fee_entry, transaction, status
-        Base.metadata.create_all(conn.engine)
+    # we use django migrations now
+    #with tx() as session:
+    #    import schema
+    #    from schema import member, fee_entry, transaction, status
+    #    #Base.metadata.create_all(conn.engine)
 
     return conn

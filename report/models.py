@@ -7,7 +7,7 @@ from django.db import models
 from django.utils.datetime_safe import datetime
 
 import config
-from schema.fee_util import PayInterval
+from schema.fee_util import DetectMethod, PayInterval
 from schema.transaction import TxType, copy_fields, optional_fields, empty_fields
 
 
@@ -30,12 +30,17 @@ class FeeEntry(models.Model):
     member = models.ForeignKey('Member', models.DO_NOTHING)
     month = models.DateField()
 
-    tx = models.ForeignKey('Transaction', models.DO_NOTHING)
+    tx = models.ForeignKey('Transaction', on_delete=models.DO_NOTHING)
     fee = models.DecimalField(decimal_places=2, max_digits=10)
     pay_interval = models.CharField(max_length=9)
+    
+    detect_method = models.TextField(
+        choices=choice_from_enum(DetectMethod),
+        default=DetectMethod.FALLBACK,
+        null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'fee_entry'
         unique_together = (('member', 'month'),)
 
@@ -60,7 +65,7 @@ class Member(models.Model):
     fee = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits=10)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'member'
 
     def __str__(self):
@@ -74,7 +79,7 @@ class Status(models.Model):
     value_dt = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'status'
 
 
@@ -125,7 +130,7 @@ class Transaction(models.Model):
     original_amount = models.DecimalField(decimal_places=2, max_digits=10)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'transaction'
 
     def save(self, *args, **kwargs):

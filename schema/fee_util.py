@@ -24,6 +24,14 @@ class AllFee(enum.Enum):
     STUDENT_15 = 15
     REGULAR_18 = 18
 
+class DetectMethod(enum.IntEnum):
+    MANUAL = 100
+    FEE_COMMAND = 90
+    
+    LAST_FEE = 20
+    MULTIPLE_OF_FEE = 10
+
+    FALLBACK = 0
 
 common_fee_amounts = {f.value: f.name for f in CommonFee}
 fee_amounts = {f.value: f.name for f in AllFee}
