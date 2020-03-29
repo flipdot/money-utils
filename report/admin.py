@@ -1,8 +1,7 @@
 from django.contrib import admin
 
 from .models import *
-
-admin.register(Member)
+from django.utils.html import format_html
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
@@ -12,9 +11,22 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(Member)
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nick', 'first_name', 'last_name', 'email', 'entry_date', 'exit_date',
+    class Media:
+        css = {
+            'all': ('admin.css',)
+        }
+    
+    def is_member(self, obj):
+        return obj.is_member()
+    
+    list_display = ('id', 'is_member', 'nick', 'first_name', 'last_name', 'email', 'entry_date', 'exit_date',
         'pay_interval', 'last_fee', 'fee')
+    
+    is_member.boolean = True
+    
+    
     date_hierarchy = 'entry_date'
+    
 
 @admin.register(Status)
 class StatusAdmin(admin.ModelAdmin):

@@ -73,6 +73,9 @@ class Member(models.Model):
         managed = True
         db_table = 'member'
 
+    def is_member(self):
+        return not self.exit_date
+
     def __str__(self):
         return " ".join([self.first_name, self.last_name,
             "(%s)" % self.nick if self.nick else ''])
