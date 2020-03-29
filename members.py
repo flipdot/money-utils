@@ -20,7 +20,7 @@ import config
 import db
 import util
 from schema.fee_entry import FeeEntry
-from schema.fee_util import fee_amounts, PayInterval, common_fee_amounts, month_regex_ymd, month_regex_ym, month_regex_ymd_range
+from schema.fee_util import DetectMethod, PayInterval, common_fee_amounts, fee_amounts, month_regex_ym, month_regex_ymd, month_regex_ymd_range
 from schema.member import Member
 from schema.transaction import Transaction, TxType
 from dateutil.rrule import MONTHLY, rrule
@@ -235,7 +235,7 @@ def analyze_fees(member, today, session: Session, all_txs: Query):
 
     for tx in txs_without_entry:
         logging.debug("tx w/o entry: %s", tx)
-        entries = list(split_into_entries(member, session, tx))
+        entries = split_into_entries(member, session, tx)
         try:
             session.add_all(entries)
             session.commit()
@@ -248,7 +248,8 @@ def analyze_fees(member, today, session: Session, all_txs: Query):
             logging.warning("Deleting these: %s", delete_entries.all())
             delete_entries.delete(synchronize_session='fetch')
 
-def split_into_entries(member, session, tx) -> Iterable[FeeEntry]:
+
+def split_into_entries(member, session, tx):
     month = tx.date + relativedelta(days=config.crossover_days)
     month = month.replace(day=1)
     entry = FeeEntry(member_id=member.id, month=month, tx=tx, fee=tx.amount,
@@ -256,22 +257,30 @@ def split_into_entries(member, session, tx) -> Iterable[FeeEntry]:
     
     months = month_command(tx)
     if months:
-        return split_fee_command(tx, session, entry, months)
+        entry.detect_method = DetectMethod.FEE_COMMAND
+        return list(split_fee_command(tx, session, entry, months))
     elif tx.amount in fee_amounts:
+        entry.detect_method = DetectMethod.LAST_FEE
         logging.info('fee entry amount: %s %s', entry.month, tx)
-        yield entry
+        return [entry]
     elif tx.amount / 12 == member.fee:
-        return split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
+        entry.detect_method = DetectMethod.MULTIPLE_OF_FEE
+        return list(split_fee_months(entry, session, 12, PayInterval.YEARLY, tx))
     elif tx.amount / 6 == member.fee:
-        return split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
+        entry.detect_method = DetectMethod.MULTIPLE_OF_FEE
+        return list(split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx))
+        
     elif tx.amount / 12 in common_fee_amounts:
-        return split_fee_months(entry, session, 12, PayInterval.YEARLY, tx)
+        entry.detect_method = DetectMethod.MULTIPLE_OF_COMMON_FEE
+        return list(split_fee_months(entry, session, 12, PayInterval.YEARLY, tx))
     elif tx.amount / 6 in common_fee_amounts:
-        return split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx)
+        entry.detect_method = DetectMethod.MULTIPLE_OF_COMMON_FEE
+        return list(split_fee_months(entry, session, 6, PayInterval.SIX_MONTH, tx))
     else:
+        entry.detect_method = DetectMethod.FALLBACK
         logging.warning("Fee entry unclear! Assuming monthly for now")
         logging.info('fee entry unclear: %s %s', entry.month, tx)
-        yield entry
+        return [entry]
 
 
 def split_fee_months(entry, session, num_months, pay_interval, tx):
