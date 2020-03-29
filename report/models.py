@@ -9,6 +9,7 @@ from django.utils.datetime_safe import datetime
 import config
 from schema.fee_util import DetectMethod, PayInterval
 from schema.transaction import TxType, copy_fields, optional_fields, empty_fields
+from django.db.models import UniqueConstraint
 
 
 # This is an auto-generated Django model module.
@@ -29,6 +30,7 @@ class FeeEntry(models.Model):
 
     member = models.ForeignKey('Member', models.DO_NOTHING)
     month = models.DateField()
+    pk = UniqueConstraint(fields=['member', 'month'], name='fee_entry_member_id_month_966eb854_uniq')
 
     tx = models.ForeignKey('Transaction', on_delete=models.DO_NOTHING)
     fee = models.DecimalField(decimal_places=2, max_digits=10)
@@ -51,7 +53,7 @@ class FeeEntry(models.Model):
     def __str__(self):
         return f'Fee {self.month:%Y-%m} {self.member.id:3} ' +\
             f'detect={self.detect_method:10} interval={self.pay_interval:10} ' + \
-            f'{self.tx.id[:8]}'
+            f'{self.tx.tx_id[:8]}'
 
 
 class Member(models.Model):
@@ -103,7 +105,7 @@ class Transaction(models.Model):
 
     status = models.TextField(blank=True, null=True)
     funds_code = models.TextField(blank=True, null=True)
-    id = models.TextField(blank=True, null=True)
+    bank_type_id = models.TextField(blank=True, null=True)
     customer_reference = models.TextField(blank=True, null=True)
     bank_reference = models.TextField(blank=True, null=True)
     extra_details = models.TextField(blank=True, null=True)

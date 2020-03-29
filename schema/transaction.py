@@ -27,7 +27,7 @@ copy_fields = [
     'extra_details',
     'customer_reference',
     'bank_reference',
-    'id',
+    'bank_type_id',
     'status',
     'funds_code',
     'transaction_code',
@@ -107,7 +107,7 @@ class Transaction(Base):
     customer_reference = Column(String())
     bank_reference = Column(String())
 
-    id = Column(String())
+    bank_type_id = Column(String())
     status = Column(String()) # C
     funds_code = Column(String())
     transaction_code = Column(String())

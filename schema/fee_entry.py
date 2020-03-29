@@ -42,7 +42,7 @@ class FeeEntry(Base):
         for key in ['member_id', 'month', 'tx_id', 'fee', 'pay_interval']:
             if kwargs.get(key, None) is None:
                 if key not in self.__dict__ and key == 'tx_id':
-                    kwargs[key] = self.tx.id
+                    kwargs[key] = self.tx.tx_id
                 else:
                     kwargs[key] = self.__dict__[key]
         return FeeEntry(**kwargs)
