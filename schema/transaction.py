@@ -3,7 +3,7 @@ import logging
 from _sha256 import sha256
 from datetime import datetime
 
-from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey, Enum, JSON
+from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 
 import config
@@ -137,10 +137,10 @@ class Transaction(Base):
         self.amount = data['amount'].amount
 
         for key in copy_fields:
-            if config.debug:
-                if key not in data and key not in optional_fields:
+            if key not in data and key not in optional_fields:
+                if config.debug:
                     logging.error("Putting key %s in optional fields list", key)
-                    optional_fields.append(key)
+                optional_fields.append(key)
             if key not in optional_fields:
                 value = data[key]
             else:
@@ -163,7 +163,7 @@ class Transaction(Base):
             str(self.applicant_iban),
             str(self.amount),
             str(self.transaction_code),
-            str(self.id),
+            str(self.bank_type_id),
             str(self.status),
             str(self.prima_nota),
             str(self.purpose),

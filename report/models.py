@@ -2,14 +2,12 @@ import logging
 from _sha256 import sha256
 
 import mt940
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.utils.datetime_safe import datetime
+from django.db.models import UniqueConstraint
 
 import config
 from schema.fee_util import DetectMethod, PayInterval
 from schema.transaction import TxType, copy_fields, optional_fields, empty_fields
-from django.db.models import UniqueConstraint
 
 
 # This is an auto-generated Django model module.
@@ -157,7 +155,7 @@ class Transaction(models.Model):
             str(self.applicant_iban),
             str(self.amount),
             str(self.transaction_code),
-            str(self.id),
+            str(self.bank_type_id),
             str(self.status),
             str(self.prima_nota),
             str(self.purpose),
