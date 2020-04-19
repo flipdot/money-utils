@@ -26,6 +26,8 @@ def main(args, to=sys.stdout, months=12):
     db.init()
 
     end_month = date.today()
+    if end_month.day <= config.report_month_end:
+        end_month = end_month - relativedelta(months=1)
     end_month = end_month.replace(day=1)
 
     start_month = end_month - relativedelta(months=months)

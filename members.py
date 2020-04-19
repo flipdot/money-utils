@@ -41,7 +41,7 @@ def main(args):
         link_transactions(session, members)
 
     # only use the current month if we are  past the 18th, instead use the last
-    today = date.today() - timedelta(days=18)
+    today = date.today() - timedelta(days=25)
     today = today.replace(day=1)
     logging.info("Analyzing until %s", today)
 

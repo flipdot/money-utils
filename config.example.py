@@ -30,3 +30,8 @@ crossover_days = 10
 # We ignore transactions that are not within the requested time frame.
 # allow some fuzz time in case the bank does not know how to math
 import_fuzz_grace_days = 2
+
+# day at which the month is considered ready for reporting.
+# also the day at which membership fees are counted for the next month.
+report_month_end = 23
+
