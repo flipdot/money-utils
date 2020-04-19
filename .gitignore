@@ -12,3 +12,5 @@ pidfile
 .vscode
 data/
 data.docker/
+backups/
+
