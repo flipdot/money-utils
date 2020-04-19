@@ -30,7 +30,6 @@ def tx() -> Iterator[Session]:
     finally:
         session.close()
 
-
 def init(debug=False):
     global conn, session_maker, base
     if conn: return conn
@@ -46,7 +45,11 @@ def init(debug=False):
 
     # we use django migrations now
     with tx() as session:
-        pass
+        # these need to be imported!
+        # noinspection PyUnresolvedReferences
+        import schema
+        # noinspection PyUnresolvedReferences
+        from schema import member, fee_entry, transaction, status
         #Base.metadata.create_all(conn.engine)
 
     return conn
