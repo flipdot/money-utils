@@ -7,11 +7,12 @@ import re
 import sys
 from collections import defaultdict, Counter
 from datetime import date, timedelta
-from typing import Dict, List, Tuple, Iterable
+from typing import Dict, List, Tuple
 
 from dateutil.relativedelta import relativedelta
+from dateutil.rrule import MONTHLY, rrule
 from fuzzywuzzy import fuzz
-from sqlalchemy import or_, and_
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Query
 from sqlalchemy.orm.session import Session
@@ -20,10 +21,10 @@ import config
 import db
 import util
 from schema.fee_entry import FeeEntry
-from schema.fee_util import DetectMethod, PayInterval, common_fee_amounts, fee_amounts, month_regex_ym, month_regex_ymd, month_regex_ymd_range
+from schema.fee_util import DetectMethod, PayInterval, common_fee_amounts, fee_amounts, month_regex_ym, month_regex_ymd, \
+    month_regex_ymd_range
 from schema.member import Member
 from schema.transaction import Transaction, TxType
-from dateutil.rrule import MONTHLY, rrule
 
 logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
     format="%(levelname) 7s %(message)s")
@@ -300,8 +301,8 @@ def month_command(tx):
         if not months:
             return None
         for d in months:
-            if d > tx.date + relativedelta(years=2) or d < tx.date - relativedelta(months=6):
-                logging.warning("possible month command ignored, out of range (-2 months or +24 months): %s", tx)
+            if d > tx.date + relativedelta(years=2) or d < tx.date - relativedelta(years=1):
+                logging.warning("possible month command ignored, out of range (-2 years or +1 months): %s", tx)
                 return None
         return months
     except (ValueError, KeyError):
