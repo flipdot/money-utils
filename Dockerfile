@@ -13,7 +13,7 @@ COPY . ./
 
 ARG SOURCE_COMMIT
 RUN mkdir -p /app/data \
-	&& chown app: /app/data \
+	&& chown -R app: /app/data \
 	&& sed -i '/home=/d' uwsgi.ini \
 	&& sed -i "s/version = subprocess.*/version = '${SOURCE_COMMIT}'/" /app/hbci_client.py
 
