@@ -135,14 +135,14 @@ class Transaction(models.Model):
     settlement_tag = models.TextField(blank=True, null=True)
     debitor_identifier = models.TextField(blank=True, null=True)
     compensation_amount = models.TextField(blank=True, null=True)
-    original_amount = models.DecimalField(decimal_places=2, max_digits=10)
+    original_amount = models.DecimalField(decimal_places=2, max_digits=10, null=True)
 
     class Meta:
         managed = True
         db_table = 'transaction'
 
     def save(self, *args, **kwargs):
-        self.tx_id = self.gen_id(self)
+        self.tx_id = self.gen_id()
         super().save(*args, **kwargs)
 
     def gen_id(self):

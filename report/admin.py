@@ -1,14 +1,13 @@
-from django.contrib import admin
-
-from .models import *
 from .filters import *
-from django.utils.html import format_html
+from .models import *
+
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ('applicant_name', 'member', 'date', 'entry_date', 'purpose', 'amount',
         'import_date', 'tx_id')
     date_hierarchy = 'date'
+    list_filter = ('date', 'import_date', 'member', 'applicant_name')
 
 @admin.register(Member)
 class MemberAdmin(admin.ModelAdmin):
@@ -41,4 +40,3 @@ class FeeEntryAdmin(admin.ModelAdmin):
     date_hierarchy = 'month'
     
     list_filter = ('detect_method', 'month', 'fee', 'pay_interval',  'member')
-    
