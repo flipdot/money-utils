@@ -1,6 +1,15 @@
 # Money-Utils
 
+Automatic reporting system for small clubs analyzing member fees and drink sales.
+
 Monitors money transfers to an account and filters them according to various patterns to report information.
+
+## Features
+
+- Track member fee payments and automatic membership status
+- Allows drink account fillup via SEPA bank transfers
+- Track expenses and income for drink sales
+- Manage member information
 
 ## Developer Setup
 
