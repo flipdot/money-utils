@@ -11,7 +11,7 @@ django-request-logging==0.7.0
 django-uwsgi==0.2.2
 elementpath==1.2.1
 fints==3.0.0
-Flask==1.1.1
+Flask==2.3.2
 Flask-Compress==1.4.0
 fuzzywuzzy==0.17.0
 idna==2.8
