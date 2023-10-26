@@ -38,5 +38,5 @@ tornado==6.3.3
 urllib3==1.26.18
 uWSGI==2.0.22
 webencodings==0.5.1
-Werkzeug==2.2.3
+Werkzeug==3.0.1
 xmlschema==1.0.14
