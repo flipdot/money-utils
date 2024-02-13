@@ -49,6 +49,7 @@ The following script will:
 - Make a database:
 
   ```bash
+  mkdir -p data
   ./manage.py migrate
   ./manage.py createsuperuser
   ```
