@@ -55,6 +55,7 @@ CRON_CLASSES = [
     "bank.load_txs.LoadTXsJob",
     "django_cron.cron.FailedRunsNotificationCronJob"
 ]
+DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 90
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

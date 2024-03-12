@@ -13,6 +13,7 @@ from django.utils.datetime_safe import datetime
 
 TIMEOUT_MINS = 15
 
+
 class LoadTXsJob(CronJobBase):
     schedule = Schedule(run_every_mins=20)
     ALLOW_PARALLEL_RUNS = False
@@ -22,18 +23,19 @@ class LoadTXsJob(CronJobBase):
 
     def do(self):
         self.clean_old_requests()
-        
+
         active_request = TanRequest.active_request()
         if active_request:
-            ex = Exception("Skipping LoadTXsJob, because a TAN query is still active: %s" % active_request)
+            ex = Exception(
+                "Skipping LoadTXsJob, because a TAN query is still active: %s" % active_request)
             logging.warning(ex)
             raise ex
-        
+
         db.init(False)
         load_transactions.get_transactions(False, self.tan_callback)
-        logging.info("Loading transactions successful. Checking memberships...")
+        logging.info(
+            "Loading transactions successful. Checking memberships...")
         members.main([])
-
 
     def clean_old_requests(self):
         logging.info("Checking for old requests which should have timed out")
@@ -42,7 +44,7 @@ class LoadTXsJob(CronJobBase):
         if old_requests:
             logging.warn("Expiring these old requests: %s", old_requests)
             old_requests.update(expired=True)
-        
+
         logging.info("Checking for old requests to delete")
         old_requests = TanRequest.expired_requests()\
             .filter(date__lte=datetime.utcnow() - timedelta(days=91))\
@@ -50,7 +52,6 @@ class LoadTXsJob(CronJobBase):
         if old_requests:
             logging.warn("Deleting these old requests: %s", old_requests)
             old_requests.delete()
-
 
     def tan_callback(self, res):
         request = TanRequest(challenge=res.challenge, answer=None)
