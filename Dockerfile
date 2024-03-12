@@ -3,7 +3,7 @@ FROM python:3.11-alpine
 
 # for alpine:
 RUN --mount=type=cache,target=/var/cache/apk \
-	apk update && apk add python3-dev gcc libc-dev libffi-dev
+	apk update && apk add python3-dev gcc libc-dev libffi-dev g++
 
 RUN mkdir /install
 WORKDIR /install
@@ -11,8 +11,8 @@ WORKDIR /install
 RUN pip install --no-cache-dir poetry==1.8.2
 
 COPY poetry.lock pyproject.toml ./
-RUN --mount=type=cache,target=/home/.cache/pypoetry/cache \
-	--mount=type=cache,target=/home/.cache/pypoetry/artifacts \
+RUN --mount=type=cache,target=/root/.cache/pypoetry/cache \
+	--mount=type=cache,target=/root/.cache/pypoetry/artifacts \
 	poetry install
 
 WORKDIR /app
