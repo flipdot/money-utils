@@ -48,7 +48,7 @@ def drinks(request: HttpRequest):
     p1.xaxis.axis_label = 'Datum'
     p1.yaxis.axis_label = 'Summe'
 
-    p1.step(dates, sums, color='#22aa22', legend='Summe', line_width=3)
+    p1.step(dates, sums, color='#22aa22', legend_label='Summe', line_width=3)
     p1.line([dates[0], dates[-1]], [0, 0], color='#aa0000', line_width=1)
     p1.legend.location = "top_left"
 
@@ -103,7 +103,7 @@ def members_per_month(request: HttpRequest):
             line_width=3,
             source=df_members,
             y='count',
-            legend="Count of Members (paid fees)"
+            legend_label="Count of Members (paid fees)"
             )
 
     p1.extra_y_ranges = {"fee_range": Range1d(
@@ -116,7 +116,7 @@ def members_per_month(request: HttpRequest):
         source=df_fees,
         line_width=2,
         y_range_name="fee_range",
-        legend="Average Fee per member"
+        legend_label="Average Fee per member"
     )
 
     labels = LabelSet(x='month', y='fee', text='fee_text', level='glyph',
