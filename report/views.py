@@ -33,7 +33,7 @@ def drinks(request: HttpRequest):
     for tx in txs:
         sum += tx.amount
         dates.append(tx.date)
-        sums.append(sum)
+        sums.append(float(sum))
         txs_transformed.append({
             'sum': sum,
             'date': tx.date.isoformat(),
@@ -41,7 +41,8 @@ def drinks(request: HttpRequest):
             'purpose': tx.purpose,
             'applicant': tx.applicant_name
         })
-
+    logging.debug("txs: %s", txs_transformed)
+    logging.debug("sums: %s", sums)
     p1: Figure = figure(x_axis_type="datetime", title="Getränkeverkauf")
     p1.sizing_mode = 'scale_width'
     p1.height = 300
@@ -49,7 +50,7 @@ def drinks(request: HttpRequest):
     p1.xaxis.axis_label = 'Datum'
     p1.yaxis.axis_label = 'Summe'
 
-    p1.step(dates, sums, color='#22aa22', legend_label='Summe', line_width=3)
+    p1.step(dates, sums, color='#22aa22', legend_label="Summe", line_width=3)
     p1.line([dates[0], dates[-1]], [0, 0], color='#aa0000', line_width=1)
     p1.legend.location = "top_left"
 

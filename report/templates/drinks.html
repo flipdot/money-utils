@@ -2,9 +2,11 @@
     td.date {
         width: 5em;
     }
+
     table thead th {
         border-bottom: 1px solid #000;
     }
+
     table tr:nth-child(2n) td {
         background-color: #eee;
     }
@@ -26,23 +28,25 @@
         </tr>
     </thead>
     {% for tx in txs %}
-        <tr>
-            <td class="date">
-                {{ tx.date }}
-            </td>
-            <td>
-                {{ tx.amount }}
-            </td>
-            <td>
-                {{ tx.sum }}
-            </td>
-            <td>
-                {{ tx.applicant }}
-            </td>
-            <td>
-                {{ tx.purpose }}
-            </td>
-        </tr>
+    <tr>
+        <td class="date">
+            {{ tx.date }}
+        </td>
+        <td>
+            {{ tx.amount }}
+        </td>
+        <td>
+            {{ tx.sum }}
+        </td>
+        <td>
+            {{ tx.applicant }}
+        </td>
+        <td>
+            {{ tx.purpose }}
+        </td>
+    </tr>
     {% endfor %}
 </table>
+{% else %}
+(You're not staff, so you don't get the details)
 {% endif %}
