@@ -1,5 +1,5 @@
 #!/bin/sh
-"exec" "`dirname $0`/.env/bin/python" "$0" "$@"
+"exec" "poetry" "run" "$0" "$@"
 # coding: utf8
 import logging
 import sys

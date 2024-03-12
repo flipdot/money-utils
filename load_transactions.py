@@ -1,5 +1,5 @@
 #!/bin/sh
-"exec" "`dirname $0`/.env/bin/python" "$0" "$@"
+"exec" "poetry" "run" "$0" "$@"
 # coding: utf8
 
 import logging
@@ -23,7 +23,8 @@ MAX_LOAD_DAYS = 6 * 30
 LOAD_BACK_DAYS = 4
 
 logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
-    format="%(levelname) 7s %(module)s - %(message)s")
+                    format="%(levelname) 7s %(module)s - %(message)s")
+
 
 def main(args):
     if '--debug' in args:
@@ -33,6 +34,7 @@ def main(args):
     db.init(config.debug)
 
     get_transactions(True)
+
 
 def get_transactions(force=False, tan_callback=hbci_client.terminal_tan_callback):
     with db.tx() as session:
@@ -64,12 +66,13 @@ def load_transactions(session, last_load: Status, tan_callback):
     utcnow = datetime.utcnow()
     now = utcnow.date()
     if last_transaction:
-        fetch_from = last_transaction.entry_date - timedelta(days=LOAD_BACK_DAYS)
+        fetch_from = last_transaction.entry_date - \
+            timedelta(days=LOAD_BACK_DAYS)
     else:
-        fetch_from = now - timedelta(days = 365*2)
+        fetch_from = now - timedelta(days=365*2)
 
     while True:
-        fetch_to = fetch_from + timedelta(days = MAX_LOAD_DAYS)
+        fetch_to = fetch_from + timedelta(days=MAX_LOAD_DAYS)
         if fetch_to > now:
             fetch_to = now
 
@@ -90,10 +93,11 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date, ta
     global error
     logging.info("Fetching TXs from %s to %s", fetch_from, fetch_to)
     error = False
-    
+
     with hbci_client.get_account(tan_callback) as (conn, acc):
         def log_callback(_, response):
-            if response.code[0] not in ('0', '1', '3'): # 0&1 info, 3 warning, rest err
+            # 0&1 info, 3 warning, rest err
+            if response.code[0] not in ('0', '1', '3'):
                 global error
                 error = True
 
@@ -117,7 +121,8 @@ def load_chunk(session: Session, fetch_from: date, fetch_to: date, now: date, ta
             continue
         fuzz = timedelta(days=config.import_fuzz_grace_days)
         if tx.date + fuzz < fetch_from or tx.date - fuzz > fetch_to:
-            logging.warning("Ignoring tx which is not in requested range: %s", tx)
+            logging.warning(
+                "Ignoring tx which is not in requested range: %s", tx)
             continue
         new_txs.append(tx)
 
