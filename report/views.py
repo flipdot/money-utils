@@ -41,8 +41,8 @@ def drinks(request: HttpRequest):
             'purpose': tx.purpose,
             'applicant': tx.applicant_name
         })
-    logging.debug("txs: %s", txs_transformed)
-    logging.debug("sums: %s", sums)
+    # logging.debug("txs: %s", txs_transformed)
+    # logging.debug("sums: %s", sums)
     p1: Figure = figure(x_axis_type="datetime", title="Getränkeverkauf")
     p1.sizing_mode = 'scale_width'
     p1.height = 300
@@ -51,8 +51,8 @@ def drinks(request: HttpRequest):
     p1.yaxis.axis_label = 'Summe'
 
     p1.step(dates, sums, color='#22aa22', legend_label="Summe", line_width=3)
-    p1.line([dates[0], dates[-1]], [0, 0], color='#aa0000', line_width=1)
-    p1.legend.location = "top_left"
+    # p1.line([dates[0], dates[-1]], [0, 0], color='#aa0000', line_width=1)
+    # p1.legend.location = "top_left"
 
     html = embed.file_html(p1, resources.CDN, "Getränkeverkauf")
     context = {
@@ -89,6 +89,7 @@ def members_per_month(request: HttpRequest):
     member_fees = FeeEntry.objects.values('month').order_by('month') \
         .annotate(fee=Avg('fee'))
     df_fees = pandas.DataFrame.from_dict(member_fees)
+    df_fees['fee'] = df_fees['fee'].astype(float)
     df_fees['month'] = df_fees['month'].map(lambda m: m.strftime('%Y-%m'))
     df_fees['fee_text'] = df_fees['fee'].map(lambda p: '{:.0f}'.format(p))
 
@@ -96,7 +97,7 @@ def members_per_month(request: HttpRequest):
         title="Member pro Monat",
         x_range=df_members['month'],
         tooltips=[("Monat", "@month"), ("Anzahl", "@count")],
-        plot_height=300
+        height=300
     )
     p1.sizing_mode = 'scale_width'
 

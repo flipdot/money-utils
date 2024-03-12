@@ -83,7 +83,7 @@
             const formData = new FormData();
             formData.append('action', 'number')
             const csrftoken = getCookie('csrftoken');
-            const response = await fetch("/admin/tan", {
+            const response = await fetch("/tan", {
                 method: 'POST',
                 body: formData,
                 headers: { 'X-CSRFToken': csrftoken }
