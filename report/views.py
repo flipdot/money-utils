@@ -17,6 +17,7 @@ from .models import Transaction, FeeEntry
 from io import StringIO
 import member_report
 from django.urls import reverse
+import logging
 
 
 def index(request):
@@ -159,6 +160,7 @@ def member_report_view(request: HttpRequest):
 
 def recharges(request: HttpRequest):
     all = get_recharges()
+    logging.info("recharge JSON: %s", all)
     return JsonResponse(all)
 
 

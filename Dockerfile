@@ -1,10 +1,12 @@
-FROM python:3.8
+FROM python:3.8-alpine
 
 RUN mkdir /install
 WORKDIR /install
 
-ADD requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install poetry==1.8.2
+
+ADD poetry.lock pyproject.toml .
+RUN poetry install
 
 WORKDIR /app
 RUN useradd -m app && mkdir -p .env && ln -s /usr/local/bin .env/bin
