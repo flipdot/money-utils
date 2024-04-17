@@ -39,7 +39,7 @@ Monitors money transfers to an account and filters them according to various pat
 
 The following script will:
 
-- Make a virtualenv and install dependencies from [requirements.txt](requirements.txt)
+- Make a virtualenv and install dependencies from [pyproject.toml](pyproject.toml)
 - Setup a systemd-user-service `money.service`
 
   ```bash
