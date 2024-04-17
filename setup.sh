@@ -5,13 +5,8 @@ SERVICE_PATH=$HOME/.config/systemd/user/
 SERVICE=money.service
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-ENV=.env
-PIP=$ENV/bin/pip
-
 make_venv() {
-    [[ -x $PIP ]] || python3 -m venv $ENV
-    $PIP install wheel # is needed for uWSGI
-    $PIP install -r requirements.txt
+    poetry install --no-root
 }
 
 install_service() {
