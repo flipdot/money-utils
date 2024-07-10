@@ -58,7 +58,7 @@ webencodings = "0.5.1"
 werkzeug = "3.0.3"
 xmlschema = "1.0.14"
 xyzservices = "2023.10.1"
-zipp = "3.17.0"
+zipp = "3.19.1"
 
 
 [build-system]
