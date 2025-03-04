@@ -10,7 +10,7 @@ static/
 pidfile
 .ipynb_checkpoints
 .vscode
+.idea/
 data/
 data.docker/
 backups/
-
