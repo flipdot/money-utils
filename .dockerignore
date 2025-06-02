@@ -6,6 +6,7 @@ __pycache__
 .ipynb_checkpoints
 .vscode
 .git
+.venv/
 static/
 config.py
 data/
@@ -15,5 +16,4 @@ python-fints/
 notebooks/
 build/
 bin/
-*.sqlite
 psd2-test/

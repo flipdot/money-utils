@@ -22,4 +22,4 @@ config_file=uwsgi.ini
   done
 ) &
 
-exec poetry run uwsgi $config_file "$@"
+exec uv run uwsgi $config_file "$@"
