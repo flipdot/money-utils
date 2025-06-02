@@ -1,5 +1,5 @@
 #!/bin/sh
-"exec" "poetry" "run" "$0" "$@"
+"exec" "uv" "run" "$0" "$@"
 # coding: utf8
 import logging
 import sys

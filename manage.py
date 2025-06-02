@@ -1,5 +1,5 @@
 #!/bin/sh
-"exec" "poetry" "run" "$0" "$@"
+"exec" "uv" "run" "$0" "$@"
 
 import os
 import sys
