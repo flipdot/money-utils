@@ -29,6 +29,6 @@ volumes/
 .idea/
 .vscode/
 
-static/
-_static
+# static/
+# _static
 

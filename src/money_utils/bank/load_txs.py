@@ -14,7 +14,7 @@ import datetime as datetime_buildin
 
 from django.utils import timezone
 
-TIMEOUT_MINS = 1
+TIMEOUT_MINS = 2
 
 
 
@@ -40,7 +40,9 @@ class LoadTXsJob(CronJobBase):
 
         db.init(False)
         # load_transactions.get_transactions(False, self.tan_callback)
-        load_transactions.get_transactions(False, self.tan_request_handler)
+        load_transactions.get_transactions(True, self.tan_callback)
+        # load_transactions.get_transactions(False, self.tan_request_handler)
+        # load_transactions.get_transactions(True, self.tan_request_handler)
         logging.info("Loading transactions successful. Checking memberships...")
         members.main()
 
@@ -68,20 +70,22 @@ class LoadTXsJob(CronJobBase):
             old_requests.delete()
 
     def tan_callback(self, res):
-
         request = TanRequest(challenge=res.challenge, answer=None)
 
         if getattr(res, "challenge_hhduc", None):
             request.hhduc = res.challenge_hhduc
+        if getattr(res, "challenge_matrix", None):
+            request.matrix = res.challenge_matrix
         request.save()
         logging.info("Saved TanRequest %s", request)
 
+        logging.debug("Run 'uv run answer-tan-request' on the machine or take a look in the admin web interface")
         start_time = time.monotonic()
-        while (not request.answer) and (
+        while (request.answer is None) and (
             time.monotonic() - start_time < 60 * TIMEOUT_MINS
         ):
             request.refresh_from_db()
-            if request.answer:
+            if request.answer is not None:
                 logging.info("Got TAN answer %s %s", request, request.answer)
                 return request.answer
             logging.info("waiting for tan answer")
@@ -101,6 +105,8 @@ class LoadTXsJob(CronJobBase):
             request = TanRequest(challenge=res.challenge, answer=None)
             if hasattr(res, "challenge_hhduc"):
                 request.hhduc = res.challenge_hhduc
+            if hasattr(res, "challenge_matrix"):
+                request.matrix = res.challenge_matrix
             request.save()
             logging.info("Saved TanRequest: %s", request)
     

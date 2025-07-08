@@ -14,7 +14,7 @@ config_file=configs/uwsgi.ini
   curl -s "http://localhost:5002" >/dev/null
 
   while true; do
-    uv run scripts/manage.py runcrons
+    uv run scripts/manage.py runcrons --force
     sleep 60
   done
 ) &

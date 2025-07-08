@@ -6,6 +6,7 @@ class TanRequest(models.Model):
     expired = models.BooleanField(default=False)
     challenge = models.TextField()
     hhduc = models.TextField(null=True)
+    matrix = models.TextField(null=True)
     answer = models.TextField(null=True)
 
     @classmethod

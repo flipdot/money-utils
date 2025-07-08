@@ -52,7 +52,7 @@ def map_to_builtin(value):
         return False
     elif normalized == "none":
         return None
-    
+
     try:
         return int(value)
     except ValueError:

@@ -29,7 +29,7 @@ SECRET_KEY = config["django_secret_key"]
 # DEBUG = not os.getenv('SECRET_KEY', False)
 DEBUG = config["debug"] or SECRET_KEY == CONFIG_DEFAULTS["django_secret_key"]
 
-ALLOWED_HOSTS = [config["django_allowed_host"]] # ["money.flipdot.org"]
+ALLOWED_HOSTS = ["localhost", config["django_allowed_host"]] # ["money.flipdot.org"]
 
 # ADMINS = [('User', 'user@example.com')]
 FAILED_RUNS_CRONJOB_EMAIL_PREFIX = config["django_failed_runs_cronjob_email_prefix"] # "[money-utils cron] "
@@ -138,6 +138,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = "/static/"
-
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+print(f"{STATIC_URL=}")
+STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), "static")
+print(f"{STATIC_ROOT=}")
 

@@ -60,3 +60,42 @@ def ask_for_tan(f, response):
         return tan
     return f.send_tan(response, tan)
 
+
+def answer_tan_request():
+    import os
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE", "money_utils.webreport.settings"
+    )
+    import django
+    django.setup()
+    from django.utils import timezone
+    from django.utils.datetime_safe import datetime
+    from ..bank.models import TanRequest
+    from money_utils import db
+    import ast
+    db.init()
+
+    tan_request = TanRequest.active_request()
+    
+    if tan_request:
+        print(vars(tan_request))
+        if tan_request.answer or tan_request.expired:
+            raise ValueError("TAN request expired")
+
+        class DummyResponse:
+            def __init__(self):
+                self.challenge = tan_request.challenge
+                self.decoupled = True
+                if tan_request.hhduc is not None:
+                    self.challenge_hhduc = tan_request.hhduc
+                    self.decoupled = False
+                if tan_request.matrix is not None:
+                    self.challenge_matrix = ast.literal_eval(tan_request.matrix)
+                    self.decoupled = False
+
+        tan = ask_for_tan(None, DummyResponse())
+        tan_request.answer = tan
+        tan_request.save()
+    else:
+        raise ValueError("No TAN request active")
+

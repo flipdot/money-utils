@@ -28,6 +28,7 @@ dependencies = [
 
 [project.scripts]
 money-utils = "money_utils:main"
+answer-tan-request = "money_utils.bank.utils:answer_tan_request"
 
 [build-system]
 requires = ["hatchling"]

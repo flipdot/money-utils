@@ -49,6 +49,8 @@ def main():
     db.init()
     logging.info("Analyzing Member fees...")
 
+    init_members()
+
     with db.tx() as session:
         members = session.query(Member).order_by(Member.last_name, Member.first_name)
         link_transactions(session, members)
@@ -62,12 +64,20 @@ def main():
         member_ids = (
             session.query(Member.id).order_by(Member.last_name, Member.first_name).all()
         )
-    for id in member_ids:
+    for member_id in member_ids:
+        print(member_id)
         with db.tx() as session:
-            analyze_member(session.query(Member).get(id), today, session)
+            analyze_member(session.query(Member).get(member_id), today, session)
 
     logging.info("Analyzing finished.")
     # TODO check whether tx entries in fee_entry match up with fee sum
+
+
+def init_members():
+    with db.tx() as session:
+        txs = session.query(Transaction).filter(Transaction.amount > 0)
+        for tx in txs:
+            print(tx)
 
 
 def replace_umlauts_1(str):
@@ -122,7 +132,7 @@ def txs_by_member(session: Session, member: Member) -> Query:
         .filter(Transaction.purpose.notilike("drinks %"))
         .filter(Transaction.purpose.notilike("%Getraenke"))
         .filter(Transaction.purpose.notilike("%Einkauf%"))
-        .filter(Transaction.purpose.notilike("Baegeldeinzahlung%"))
+        .filter(Transaction.purpose.notilike("Bargeldeinzahlung%"))
         .filter(or_(Transaction.type == TxType.MEMBER_FEE, Transaction.type.is_(None)))
         .filter(Transaction.amount > 0)
     )
@@ -155,6 +165,7 @@ def link_transactions(session, members):
     tx_map: Dict[str, Transaction] = {}
 
     for member in members:
+        print(member)
         member_txs: List[Transaction] = (
             txs_by_member(session, member).filter(Transaction.member_id.is_(None)).all()
         )

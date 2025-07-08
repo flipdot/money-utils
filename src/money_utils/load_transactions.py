@@ -18,7 +18,7 @@ config = utils.get_config()
 
 MAX_LOAD_DAYS = 6 * 30
 # grace time of days to fetch extra
-LOAD_BACK_DAYS = 4
+LOAD_BACK_DAYS = 365 * 4
 
 load_interval_max = timedelta(minutes=config.load_interval_minutes)
 
@@ -67,7 +67,7 @@ def load_transactions(session, last_load: Status, tan_callback):
     if last_transaction:
         fetch_from = last_transaction.entry_date - timedelta(days=LOAD_BACK_DAYS)
     else:
-        fetch_from = now - timedelta(days=365 * 2)
+        fetch_from = now - timedelta(days=365 * 7)
 
     while True:
         fetch_to = fetch_from + timedelta(days=MAX_LOAD_DAYS)
@@ -140,3 +140,4 @@ def load_chunk(
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
+

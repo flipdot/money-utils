@@ -27,5 +27,4 @@ EXPOSE 5002
 # VOLUME ["/app/volumes"]
 
 CMD ["uv", "run", "scripts/webserver"]
-# CMD ["python"]
 # CMD ["/bin/bash"]
