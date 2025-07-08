@@ -4,7 +4,8 @@ version = "0.1.0"
 description = ""
 authors = ["Claus F. Strasburger <1156864+cfstras@users.noreply.github.com>"]
 readme = "README.md"
-packages = [{include = "money_utils"}]
+#packages = [{include = "money_utils"}]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -25,7 +26,7 @@ django-cron = "0.5.1"
 django-request-logging = "0.7.0"
 django-uwsgi = "0.2.2"
 elementpath = "1.2.1"
-fints = "3.1"
+fints = "4.2.3"
 flask = "2.3.2"
 flask-compress = "1.4.0"
 fuzzywuzzy = "0.17.0"
@@ -36,7 +37,7 @@ jinja2 = "3.1.6"
 markupsafe = "2.1.5"
 mt-940 = "4.17.0"
 packaging = "19.2"
-pandas = "2.0.3"
+pandas = "2.3.1"
 pillow = "10.3.0"
 pyparsing = "2.4.2"
 python-dateutil = "2.8.2"
