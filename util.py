@@ -1,3 +1,4 @@
+import pickle
 from datetime import date
 from typing import Iterable, Iterator
 
@@ -27,3 +28,12 @@ months_german = {
     'November': 11,
     'Dezember': 12,
 }
+
+def load_pickle(location):
+    with open(location, "rb") as fd:
+        return pickle.load(fd)
+
+
+def save_pickle(location, obj):
+    with open(location, "wb") as fd:
+        pickle.dump(obj, fd)

@@ -9,7 +9,8 @@ from fints.client import *
 import config
 from fints.hhd.flicker import terminal_flicker_unix
 import atexit
-import os
+
+from client import save_client, client_from_config
 
 logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO)
 logging.getLogger("fints.dialog").setLevel(logging.DEBUG)
@@ -52,46 +53,22 @@ def get_connection(ask_for_tan=terminal_tan_callback):
     if not pin:
         pin = getpass.getpass("Please enter PIN: ")
 
-    data = None
-    try:
-        with open("data/fints_state.bin", "rb") as fd:
-            data = fd.read()
-    except IOError as e:
-        logging.info("State not recovered: %s", e)
+    conn = client_from_config()
 
-    conn = FinTS3PinTanClient(
-        bank_identifier=config.blz,
-        user_id=config.user,
-        pin=pin,
-        server=config.fints_url,
-        product_id=config.product_id,
-        mode=FinTSClientMode.INTERACTIVE,
-        product_version=version,
-        from_data=data
-    )
-    #conn._need_twostep_tan_for_segment = lambda _: True
-    #conn.fetch_tan_mechanisms()
-    #conn.set_tan_mechanism('910')
-    #conn.set_tan_mechanism('942')   # eg for mobiletan at gls
-
-    if conn.init_tan_response:
-        logging.info("Calling tan callback for init_tan_response %s", conn.init_tan_response)
-        tan = ask_for_tan(conn.init_tan_response)
-        conn.send_tan(conn.init_tan_response, tan)
-    
     logging.info("registering shutdown hook")
     atexit.register(save_conn)
     return conn
     
 def save_conn():
     global conn
-    if conn:
-        logging.info("registering atexit hook")
-        data = conn.deconstruct(True)
-        if not os.path.exists("data"):
-            os.makedirs("data")
-        with open("data/fints_state.bin", "wb") as fd:
-            fd.write(data)
+    save_client(conn)
+    # if conn:
+    #     logging.info("registering atexit hook")
+    #     data = conn.deconstruct(True)
+    #     if not os.path.exists("data"):
+    #         os.makedirs("data")
+    #     with open("data/fints_state.bin", "wb") as fd:
+    #         fd.write(data)
 
 @contextmanager
 def get_account(ask_for_tan=None):
