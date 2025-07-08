@@ -1,0 +1,107 @@
+<head>
+    <style>
+        body {
+            color: #444444;
+            font-family: 'sans-serif';
+        }
+        nav {
+            display: flex;
+            width: 100%;
+            flex-direction: row;
+        }
+        nav section {
+            margin: .5rem;
+            width: 33.3333%;
+            display: flex;
+            flex-direction: column;
+            background-color: #fafafa;
+        }
+        nav section .section-header {
+            text-align: center;
+            font-weight: bold;
+        }
+        nav section a {
+            display: block;
+            padding: .6rem .1rem;
+        }
+        nav section a:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+    </style>
+</head>
+
+<nav>
+
+    <section>
+        <p class="section-header">main</p>
+        {% if user.is_superuser %}
+            <a href="{% url 'admin:index' %}">admin</a>
+            <a href="/admin/uwsgi">uwsgi</a>
+            <a href="{% url 'report:tan' %}">tan <span id="tan_badge"></span></a>
+        {% else %}
+            <a href="{% url 'admin:login' %}">admin</a>
+        {% endif %}
+    </section>
+
+    <section>
+        <p class="section-header">drinks</p>
+        <a href="{% url 'report:drinks' %}">Drinks sales</a>
+        <a href="{% url 'report:recharges' %}">Recharges (json)</a>
+    </section>
+
+    <section>
+        <p class="section-header">members</p>
+        <a href="{% url 'report:members_per_month' %}">Members per month</a>
+        {% if user.is_superuser %}
+            <a href="{% url 'report:member_report' %}">Member Report</a>
+        {% endif %}
+    </section>
+</nav>
+
+{% if user.is_superuser %}
+    <script>
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const tanBadge = document.getElementById('tan_badge');
+
+    async function fetch_now() {
+        try {
+            const formData = new FormData();
+            formData.append('action', 'number')
+            const csrftoken = getCookie('csrftoken');
+            const response = await fetch("/tan", {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': csrftoken }
+                })
+            const json = await response.json();
+
+            if (json.number) {
+                tanBadge.textContent = "(" + json.number + ")";
+                tanBadge.style.color = "red";
+            } else {
+                tanBadge.textContent = "";
+                tanBadge.style.color = "";
+            }
+
+        } finally {
+            setTimeout(fetch_now, 5000);
+        }
+    }
+    setTimeout(fetch_now, 0);
+    </script>
+{% endif %}

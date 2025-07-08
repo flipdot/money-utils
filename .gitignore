@@ -1,5 +1,5 @@
 config.py
-__pycache__
+**/__pycache__/
 cache.bin
 *.pyc
 example.txt
@@ -11,6 +11,11 @@ pidfile
 .ipynb_checkpoints
 .vscode
 .idea/
+backups/
+.htpasswd
+*.swp
+
 data/
 data.docker/
-backups/
+volumes/
+

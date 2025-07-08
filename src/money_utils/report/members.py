@@ -1,0 +1,80 @@
+#!/bin/sh
+"execpoetryrun$0$@"
+
+# coding: utf8
+import logging
+import sys
+import typing
+from datetime import date
+
+from dateutil.relativedelta import relativedelta
+
+from money_utils import db
+import money_utils.utils as util
+from money_utils.schema.fee_entry import FeeEntry
+from money_utils.schema.member import Member
+
+config = util.get_config()
+
+logging.basicConfig(
+    level=logging.DEBUG if config.debug else logging.INFO,
+    format="%(levelname) 7s %(message)s",
+)
+
+
+def main(args, to=sys.stdout, months=12):
+    if "--debug" in args:
+        logging.getLogger("").setLevel(logging.DEBUG)
+    run(to, months)
+
+
+def run(to, months):
+
+    db.init()
+
+    end_month = date.today()
+    if end_month.day <= config.report_month_end:
+        end_month = end_month - relativedelta(months=1)
+    end_month = end_month.replace(day=1)
+
+    start_month = end_month - relativedelta(months=months)
+
+    with db.tx() as session:
+        members = session.query(Member).order_by(Member.last_name, Member.first_name)
+        members_table(session, members, start_month, end_month, to)
+
+
+def members_table(
+    session, members, start_month, end_month, to: typing.TextIO = sys.stdout
+):
+    months = list(util.months(start_month, end_month))
+
+    members = members.all()
+    sys.stderr.flush()
+    to.flush()
+
+    to.write("   {name:^20} | ".format(name="Name"))
+    for month, next_month in months:
+        to.write(" {:2}  ".format(month.month))
+    to.write("\n" + "-" * (20 + 3 + 5 * len(months)) + "\n")
+
+    for member in members:
+        to.write("{:2} ".format(member.id))
+        to.write("{:>20.20} | ".format(member.name))
+        for month, next_month in months:
+            fees = (
+                session.query(FeeEntry)
+                .filter(FeeEntry.member_id == member.id)
+                .filter(FeeEntry.month == month)
+                .all()
+            )
+            if len(fees) == 0:
+                to.write("     ")
+            else:
+                to.write(
+                    " {:>2.0f}{:1} ".format(
+                        sum([f.fee for f in fees]), "" if len(fees) == 1 else len(fees)
+                    )
+                )
+        to.write("\n")
+

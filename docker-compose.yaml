@@ -1,13 +1,14 @@
-version: "3"
 services:
-  money:
+  money-utils:
     build:
       context: .
       args:
         - SOURCE_COMMIT
+      dockerfile: Dockerfile
     ports:
       - 5002:5002
     volumes:
-      - ./data.docker:/app/data
-      - ./config.py:/app/config.py:ro
+      - .env:/app/.env:ro
+      - ./volumes:/app/volumes
     restart: unless-stopped
+

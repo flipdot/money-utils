@@ -1,4 +1,4 @@
-# Money-Utils
+# money-utils
 
 Automatic reporting system for small clubs analyzing member fees and drink sales.
 
@@ -13,7 +13,7 @@ Monitors money transfers to an account and filters them according to various pat
 
 ## Developer Setup
 
-> **Note**:  
+> **Note**:
 > If all you want is run the service, please head down to the
 > **[Deployment](#deployment)** section.
 
