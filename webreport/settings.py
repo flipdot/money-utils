@@ -27,7 +27,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', default_secret_key)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = not os.getenv('SECRET_KEY', False)
 
-ALLOWED_HOSTS = []
+# TODO: create a separate setting for dev and production!
+ALLOWED_HOSTS = ["money.flipdot.org"]
 
 #ADMINS = [('User', 'user@example.com')]
 FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[money-utils cron] "
