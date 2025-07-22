@@ -1,5 +1,4 @@
-#!/bin/sh
-"exec" "poetry" "run" "$0" "$@"
+#!/usr/bin/env -S uv run
 # coding: utf8
 
 import logging
