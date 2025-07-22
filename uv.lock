@@ -253,7 +253,7 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ac/55/7417e334519830f7f00565ac4b126a3dce88b1fd707ffce75aac5610c067/elementpath-1.2.1-py2.py3-none-any.whl", hash = "sha256:e9aeb3d78ef967f43d73247a164dd5bc68caf13016e3e5a4a0ca029b6078bffa", size = 66088, upload-time = "2019-08-30T06:27:39.318Z" },
 ]
 
-Up[[package]]
+[[package]]
 name = "enum-tools"
 version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
