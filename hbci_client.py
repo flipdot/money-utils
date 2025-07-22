@@ -72,7 +72,7 @@ def terminal_tan_callback(response):
             pass
     elif getattr(response, "challenge_matrix", None):
         logging.info("Scan this qr code")
-        print(challenge_matrix_to_unicode_qr(response.challenge_matrix))
+        logging.info("\n" + challenge_matrix_to_unicode_qr(response.challenge_matrix))
     while True:
         tan = input('Please enter TAN:')
         if tan:
@@ -97,7 +97,10 @@ def get_connection(ask_for_tan=None):
         pin = getpass.getpass("Please enter PIN: ")
 
     # TODO: ask_for_tan needs to be passed through, so that it
-    #       also works in the web interface
+    #       also works in the web interface.
+    #       However, currently it seems that we cannot pass the challenge in the Django UI.
+    #       This will be tackled in a separate PR – for now, you are required to do the challenge on the
+    #       command line.
     # conn = client_from_config(ask_for_tan)
     conn = client_from_config()
 
@@ -108,13 +111,6 @@ def get_connection(ask_for_tan=None):
 def save_conn():
     global conn
     save_client(conn)
-    # if conn:
-    #     logging.info("registering atexit hook")
-    #     data = conn.deconstruct(True)
-    #     if not os.path.exists("data"):
-    #         os.makedirs("data")
-    #     with open("data/fints_state.bin", "wb") as fd:
-    #         fd.write(data)
 
 @contextmanager
 def get_account(ask_for_tan=None):
