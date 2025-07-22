@@ -24,7 +24,6 @@ LOAD_BACK_DAYS = 4
 logging.basicConfig(level=logging.DEBUG if config.debug else logging.INFO,
                     format="%(levelname) 7s %(module)s - %(message)s")
 
-
 def main(args):
     if '--debug' in args:
         config.debug = True
