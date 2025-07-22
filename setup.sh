@@ -6,7 +6,7 @@ SERVICE=money.service
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 make_venv() {
-    poetry install --no-root
+    uv sync --no-install-workspace
 }
 
 install_service() {
