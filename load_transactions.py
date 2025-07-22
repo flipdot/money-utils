@@ -1,5 +1,4 @@
-#!/bin/sh
-"exec" "uv" "run" "$0" "$@"
+#!/usr/bin/env -S uv run
 # coding: utf8
 
 import logging

@@ -7,16 +7,18 @@
 # We don't use alpine or -slim, because pandas is a pain to build on them.
 FROM python:3.11
 
-RUN pip install --no-cache-dir uv==0.7.9
+COPY --from=ghcr.io/astral-sh/uv:0.8.0 /uv /uvx /bin/
 
 WORKDIR /app
 RUN useradd -m app && chown -R app: /app
 USER app
 
 COPY uv.lock pyproject.toml ./
-RUN mkdir -p /home/app/.cache/uv/
+ENV UV_LINK_MODE=copy
+ENV UV_FROZEN=1
+ENV UV_COMPILE_BYTECODE=1
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/app/.cache/uv \
-	uv sync
+	uv sync --no-install-project
 
 COPY --chown=app:app . ./
 

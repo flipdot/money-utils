@@ -16,4 +16,5 @@ python-fints/
 notebooks/
 build/
 bin/
+*.sqlite
 psd2-test/

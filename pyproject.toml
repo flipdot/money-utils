@@ -2,7 +2,11 @@
 name = "money-utils"
 version = "0.1.0"
 description = ""
-authors = ["Claus F. Strasburger <1156864+cfstras@users.noreply.github.com>"]
+authors = [
+  "Soeren Wegener <wegener92@gmail.com>",
+  "Jonas Thelemann <e-mail@jonas-thelemann.de>",
+  "Claus F. Strasburger <1156864+cfstras@users.noreply.github.com>"
+]
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
