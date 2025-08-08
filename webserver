@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-cd "$(dirname $0)"
+cd "$(dirname "$0")"
 
 config_file=uwsgi.ini
 
@@ -10,12 +10,13 @@ config_file=uwsgi.ini
   exit 1
 )
 
-(set -eu
+(
+  set -eu
   sleep 10
-  
+
   # check whether backend is available
   curl -s "http://localhost:5002" >/dev/null
-  
+
   while true; do
     ./manage.py runcrons
     sleep 60
