@@ -207,6 +207,27 @@ wheels = [
 ]
 
 [[package]]
+name = "django-cron"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/eb/0e/7341616ff90aac0b2c36fe172663bbaa0fc396e1effc215813a3eea8b7e1/django-cron-0.6.0.tar.gz", hash = "sha256:dc3c0d3433a2e4e7012f77f6d8415ad90367ba068649db2674325bc36f935841", size = 14768, upload-time = "2022-05-11T09:20:15.062Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f3/fc/9a0fa82f88165d44aa38623a77f7a95bc09c4013557b30620cf5d57e4d0c/django_cron-0.6.0-py3-none-any.whl", hash = "sha256:016203554748512b7f19d7363b4fde8741c6ff63fe8a15051f3031f4a0506a41", size = 19314, upload-time = "2022-05-11T09:06:48.57Z" },
+]
+
+[[package]]
+name = "django-uwsgi"
+version = "0.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1f/19/e24dbc8ac8cf4a16c4af6140dc1583b219ef53e4a0675b884f9acc482d1c/django-uwsgi-0.2.2.tar.gz", hash = "sha256:eadbc34f5c4e3bd54b65717bc91411501327f3a94dd2607e587d7e5aeb5dda3c", size = 354093, upload-time = "2018-08-09T02:15:35.671Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/f2/73e03a4b56d07138ad4293327700003d35f16a83e137e5d49205767aa0bd/django_uwsgi-0.2.2-py3-none-any.whl", hash = "sha256:921fb5547e1c5edc740019ba65e0f066448f99730f4194c4ba736b40333de23f", size = 23061, upload-time = "2018-08-09T02:15:31.623Z" },
+]
+
+[[package]]
 name = "elementpath"
 version = "5.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -355,6 +376,8 @@ source = { virtual = "." }
 dependencies = [
     { name = "bokeh" },
     { name = "django" },
+    { name = "django-cron" },
+    { name = "django-uwsgi" },
     { name = "fints" },
     { name = "fuzzywuzzy" },
     { name = "pandas" },
@@ -365,6 +388,8 @@ dependencies = [
 requires-dist = [
     { name = "bokeh", specifier = ">=3,<4" },
     { name = "django", specifier = ">=3,<4" },
+    { name = "django-cron", specifier = "==0.6.0" },
+    { name = "django-uwsgi", specifier = "==0.2.2" },
     { name = "fints", specifier = "==4.2.3" },
     { name = "fuzzywuzzy", specifier = "==0.17.0" },
     { name = "pandas", specifier = "==2.3.1" },
