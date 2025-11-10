@@ -14,8 +14,8 @@ dependencies = [
   "django>=3,<4",
   "django-cron==0.6.0",
   "django-uwsgi==0.2.2",
-  "fints==4.2.3",
-  "fuzzywuzzy==0.17.0",
-  "pandas==2.3.1",
-  "sqlalchemy==1.3.0",
+  "fints==4.2.4",
+  "fuzzywuzzy==0.18.0",
+  "pandas==2.3.3",
+  "sqlalchemy==1.4.54",
 ]
