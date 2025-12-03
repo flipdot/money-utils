@@ -5,7 +5,7 @@
 # RUN apk add --update --no-cache py3-numpy py3-pandas@testing
 
 # We don't use alpine or -slim, because pandas is a pain to build on them.
-FROM python:3.11
+FROM python:3.14
 
 COPY --from=ghcr.io/astral-sh/uv:0.9.15 /uv /uvx /bin/
 
