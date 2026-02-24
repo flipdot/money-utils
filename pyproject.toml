@@ -17,5 +17,5 @@ dependencies = [
   "fints==4.2.4",
   "fuzzywuzzy==0.18.0",
   "pandas==2.3.3",
-  "sqlalchemy==1.4.54",
+  "sqlalchemy==2.0.47",
 ]
