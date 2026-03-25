@@ -7,7 +7,7 @@
 # We don't use alpine or -slim, because pandas is a pain to build on them.
 FROM python:3.11@sha256:4651409ff55024245f70920259ecee27f2109b0dc0e502a10bce541f1072cd66
 
-COPY --from=ghcr.io/astral-sh/uv:0.11.0@sha256:e49fde5daf002023f0a2e2643861ce9ca8a8da5b73d0e6db83ef82ff99969baf /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.1@sha256:fc93e9ecd7218e9ec8fba117af89348eef8fd2463c50c13347478769aaedd0ce /uv /uvx /bin/
 
 WORKDIR /app
 RUN useradd -m app && chown -R app: /app
