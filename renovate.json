@@ -13,7 +13,8 @@
       "groupName": "all non-major python dependencies",
       "groupSlug": "all-minor-patch-python",
       "matchPackageNames": ["python", "actions/python-versions"],
-      "matchUpdateTypes": ["minor", "patch"]
+      "matchUpdateTypes": ["minor", "patch"],
+      "allowedVersions": "3.12"
     }
   ]
 }
