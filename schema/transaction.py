@@ -1,6 +1,6 @@
 import enum
+import hashlib
 import logging
-from _sha256 import sha256
 from datetime import datetime
 
 from sqlalchemy import Column, String, Numeric, Date, DateTime, Integer, ForeignKey, Enum
@@ -168,7 +168,7 @@ class Transaction(Base):
             str(self.prima_nota),
             str(self.purpose),
         ])
-        sha = sha256(raw.encode("UTF8"))
+        sha = hashlib.sha256(raw.encode("UTF8"))
         return sha.hexdigest()
 
     def __str__(self) -> str:

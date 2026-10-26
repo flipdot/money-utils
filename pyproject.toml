@@ -11,11 +11,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "bokeh>=3,<4",
-  "django>=3,<4",
+  "django>=4.2.26,<5",
   "django-cron==0.6.0",
-  "django-uwsgi==0.2.2",
   "fints==4.2.4",
   "fuzzywuzzy==0.18.0",
   "pandas==2.3.3",
   "sqlalchemy==1.4.54",
+  "uwsgi==2.0.31",
 ]

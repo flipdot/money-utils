@@ -37,7 +37,6 @@
         <p class="section-header">main</p>
         {% if user.is_superuser %}
             <a href="{% url 'admin:index' %}">admin</a>
-            <a href="/admin/uwsgi">uwsgi</a>
             <a href="{% url 'report:tan' %}">tan <span id="tan_badge"></span></a>
         {% else %}
             <a href="{% url 'admin:login' %}">admin</a>

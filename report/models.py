@@ -1,5 +1,5 @@
 import logging
-from _sha256 import sha256
+import hashlib
 
 import mt940
 from django.db import models
@@ -160,7 +160,7 @@ class Transaction(models.Model):
             str(self.prima_nota),
             str(self.purpose),
         ])
-        sha = sha256(raw.encode("UTF8"))
+        sha = hashlib.sha256(raw.encode("UTF8"))
         return sha.hexdigest()
 
 
