@@ -6,7 +6,7 @@
     {
       "groupName": "all non-major dependencies, except python",
       "groupSlug": "all-minor-patch",
-      "matchPackageNames": ["*", "!python", "!actions/python-versions"],
+      "matchPackageNames": ["!python", "!actions/python-versions"],
       "matchUpdateTypes": ["minor", "patch"]
     },
     {
