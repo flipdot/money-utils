@@ -35,6 +35,13 @@ FAILED_RUNS_CRONJOB_EMAIL_PREFIX = "[money-utils cron] "
 
 APPEND_SLASH = True
 
+# Keep the pre-Django-6.0 default: the existing database schema (and the
+# vendored django_cron migrations) use 32-bit auto primary keys. Since
+# Django 6.0 the default auto-created primary key is BigAutoField, which
+# would require table-rebuild migrations with no functional benefit on
+# SQLite. report.Member declares its AutoField explicitly and is unaffected.
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
