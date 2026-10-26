@@ -14,7 +14,7 @@ dependencies = [
   # NOTE: django-cron 0.6.0 (last release, unmaintained) is incompatible with
   # Django >= 5.1; a patched copy is vendored in ./django_cron instead.
   "django>=5.2.18,<6",
-  "fints==4.2.4",
+  "fints==5.0.1",
   "fuzzywuzzy==0.18.0",
   "mt-940>=5.1.1,<6",
   "pandas==2.3.3",
