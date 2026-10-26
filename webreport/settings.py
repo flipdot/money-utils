@@ -52,7 +52,9 @@ INSTALLED_APPS = [
 
 CRON_CLASSES = [
     "bank.load_txs.LoadTXsJob",
-    "django_cron.cron.FailedRunsNotificationCronJob"
+    # "django_cron.cron.FailedRunsNotificationCronJob" is not used: it needs
+    # settings.ADMINS, which is not configured. Leaving it in CRON_CLASSES
+    # made runcrons abort before LoadTXsJob could run.
 ]
 DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 90
 
@@ -128,8 +130,6 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 

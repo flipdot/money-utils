@@ -4,11 +4,10 @@ import pandas
 from bokeh import embed, resources
 from bokeh.models import Range1d, LinearAxis, LabelSet, ColumnDataSource
 from bokeh.plotting import figure
+from datetime import datetime, timezone
 from django.db.models import Q, Count, Avg
 from django.http import HttpRequest, HttpResponseNotFound, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
-from django.utils import timezone
-from django.utils.datetime_safe import datetime
 from django.utils.safestring import mark_safe
 
 from bank.models import TanRequest
