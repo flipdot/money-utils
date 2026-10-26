@@ -49,7 +49,7 @@ with f:
     else:
         print("Multiple accounts available, choose one")
         for i, mm in enumerate(accounts):
-            print(i, mm.iban)
+            print(i, mm.iban[:4] + "****" + mm.iban[-4:])
         choice = input("Choice: ").strip()
         account = accounts[int(choice)]
 
