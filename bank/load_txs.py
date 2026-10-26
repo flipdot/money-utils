@@ -8,8 +8,7 @@ import load_transactions
 import members
 from bank.models import TanRequest
 
-from datetime import timedelta
-from django.utils.datetime_safe import datetime
+from datetime import datetime, timedelta
 
 TIMEOUT_MINS = 15
 

@@ -28,7 +28,6 @@ class FeeEntry(models.Model):
 
     member = models.ForeignKey('Member', models.DO_NOTHING)
     month = models.DateField()
-    pk = UniqueConstraint(fields=['member', 'month'], name='fee_entry_member_id_month_966eb854_uniq')
 
     tx = models.ForeignKey('Transaction', on_delete=models.DO_NOTHING)
     fee = models.DecimalField(decimal_places=2, max_digits=10)
@@ -42,7 +41,14 @@ class FeeEntry(models.Model):
     class Meta:
         managed = True
         db_table = 'fee_entry'
-        unique_together = (('member', 'month'),)
+        # unique_together was removed in Django 5.1; this is the equivalent
+        # constraint. The name matches the index unique_together used to
+        # generate, so existing databases keep the same index; see
+        # 0009_feeentry_member_month_unique for the migration.
+        constraints = [
+            UniqueConstraint(fields=['member', 'month'],
+                             name='fee_entry_member_id_month_966eb854_uniq')
+        ]
 
     def save(self, *args, **kwargs):
         self.id = "{}|{}".format(self.member.id, self.month)
