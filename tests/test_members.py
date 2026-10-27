@@ -169,7 +169,7 @@ class TestAnalyzeMember:
         assert all(tx.type is None for tx in txs)
 
     def test_collision_drops_the_month_until_data_changes(self, session):
-        """Documented behavior of the known collision bug.
+        """Documented behavior of the known collision bug (issue #110).
 
         Two transactions that resolve to the same month: the first is
         stored, the second collides on the (member, month) uniqueness
@@ -231,9 +231,9 @@ class TestNameMatching:
             ('Miete max', TxType.PROJECT_EXPENSE, '10.00', False),
             ('Miete max', None, '-10.00', False),        # refunds
         ]
-        # KNOWN GAP: the exclusions are position-dependent LIKE patterns, so
-        # "Getraenke" only matches at the END of the purpose. A drink
-        # purchase whose purpose continues with the member's name
+        # KNOWN GAP (issue #112): the exclusions are position-dependent LIKE
+        # patterns, so "Getraenke" only matches at the END of the purpose. A
+        # drink purchase whose purpose continues with the member's name
         # ("Getraenke max") is still linked as a fee. Same holds for
         # "spende" in the middle of a purpose ("xyz spende abc").
         txs = []
