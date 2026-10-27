@@ -85,6 +85,18 @@ Deployment in dev setup:
   ./webserver
   ```
 
+## Testing
+
+The test suite covers the fee analysis, transaction deduplication,
+drink-recharge reports and the TAN lifecycle. It runs without bank
+credentials and without `config.py` (it falls back to
+[config.example.py](config.example.py)) and never touches a real database.
+
+```bash
+uv sync          # installs the dev group (pytest)
+uv run pytest
+```
+
 ## Deployment
 
 Do these steps:

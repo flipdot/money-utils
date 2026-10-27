@@ -18,7 +18,7 @@ ENV UV_LINK_MODE=copy
 ENV UV_FROZEN=1
 ENV UV_COMPILE_BYTECODE=1
 RUN --mount=type=cache,uid=1000,gid=1000,target=/home/app/.cache/uv \
-	uv sync --no-install-project
+	uv sync --no-install-project --no-group dev
 
 COPY --chown=app:app . ./
 

@@ -21,3 +21,18 @@ dependencies = [
   "sqlalchemy==2.1.6",
   "uwsgi==2.0.31",
 ]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-django>=4.8,<5",
+]
+
+[tool.pytest.ini_options]
+# No DJANGO_SETTINGS_MODULE here: pytest-django would then initialize Django
+# during its preparse hook, before the root conftest.py has loaded the
+# machine-local ``config`` module (see conftest.py). The conftest sets
+# DJANGO_SETTINGS_MODULE and calls django.setup() itself.
+django_find_project = false
+python_files = ["test_*.py", "tests.py"]
+testpaths = ["tests", "report", "bank"]

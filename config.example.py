@@ -13,6 +13,13 @@ pin = "" # leave empty to ask
 iban = "DE0000000000000"
 product_id = "FILL_ME"
 
+# Leave empty to let the bank pick the TAN mechanism;
+# or force one, e.g. "pushTAN".
+tan_mechanism = ""
+
+# Where the FinTS client state (dialog resumption data) is persisted.
+client_state_file_location = "data/client_state.pickle"
+
 load_interval_minutes = 60
 
 bind_host = '127.0.0.1'
