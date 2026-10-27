@@ -27,6 +27,27 @@ jobs:
       packages: write
     with:
       PUSH: false
+  test:
+    needs: ci-optimization
+    if: needs.ci-optimization.outputs.continue == 'true'
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.15"
+
+      # Fails if uv.lock is out of date, and installs the dev group (pytest).
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Compile all modules
+        run: uv run python -m compileall -q . -x '.git|.venv|static|data'
+
+      - name: Run tests
+        run: uv run pytest -v
   # release_semantic:
   #   needs: build
   #   name: Release (semantic)

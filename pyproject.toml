@@ -21,3 +21,14 @@ dependencies = [
   "sqlalchemy==2.1.6",
   "uwsgi==2.0.31",
 ]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-django>=4.8,<5",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "webreport.settings"
+python_files = ["test_*.py", "tests.py"]
+testpaths = ["tests", "report", "bank"]
