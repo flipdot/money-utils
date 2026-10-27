@@ -92,14 +92,12 @@ def txs_by_member(member: Member) -> Select:
 
     return select(Transaction)\
         .where(or_(*or_items))\
-        .where(Transaction.purpose.notilike("%spende")) \
-        .where(Transaction.purpose.notilike("%spende %")) \
-        .where(Transaction.purpose.notilike("spende %")) \
-        .where(Transaction.purpose.notilike("spende")) \
-        .where(Transaction.purpose.notilike("drinks %")) \
-        .where(Transaction.purpose.notilike("%Getraenke")) \
+        .where(Transaction.purpose.notilike("%spende%")) \
+        .where(Transaction.purpose.notilike("%drinks %")) \
+        .where(Transaction.purpose.notilike("%drink %")) \
+        .where(Transaction.purpose.notilike("%Getraenke%")) \
         .where(Transaction.purpose.notilike("%Einkauf%")) \
-        .where(Transaction.purpose.notilike("Baegeldeinzahlung%")) \
+        .where(Transaction.purpose.notilike("%Baegeldeinzahlung%")) \
         .where(or_(Transaction.type == TxType.MEMBER_FEE, Transaction.type.is_(None)))\
         .where(Transaction.amount > 0)
 
