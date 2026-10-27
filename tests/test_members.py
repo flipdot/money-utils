@@ -168,31 +168,39 @@ class TestAnalyzeMember:
         assert members.member_txs_additional(session, member, txs) is False
         assert all(tx.type is None for tx in txs)
 
-    def test_collision_drops_the_month_until_data_changes(self, session):
-        """Documented behavior of the known collision bug (issue #110).
-
-        Two transactions that resolve to the same month: the first is
-        stored, the second collides on the (member, month) uniqueness
-        constraint. The current code deletes the stored entry but never
-        re-inserts the new one. Because both transactions remain
-        unassigned, every subsequent run repeats the exact same sequence
-        and the month stays empty -- the payment is missing from the
-        report indefinitely (and eventually the member gets marked as
-        having quit), until one of the transactions is corrected.
+    def test_collision_keeps_existing_entry_and_is_stable(self, session):
+        """Two transactions that resolve to the same month: the first one
+        gets the month's fee entry, the second collides on the (member,
+        month) uniqueness constraint and is left without an entry. The
+        existing entry is kept and repeated runs are idempotent, so the
+        month keeps its payment in the report and the member is not
+        marked as having quit (the old behavior deleted the entry and
+        the month showed no payment at all; see issue #110).
         """
         member = make_member(session, entry_date=date(2024, 1, 1))
-        add_fee_tx(session, member, date(2024, 1, 5), '23.00')
+        first_tx = add_fee_tx(session, member, date(2024, 1, 5), '23.00')
         add_fee_tx(session, member, date(2024, 1, 6), '23.00')
         session.flush()
 
         analyze_member(member, today=date(2024, 1, 1), session=session)
         session.commit()
-        assert fee_entry_months(session, member) == {}
 
-        # a second run does not heal the data: the same collision recurs
+        entries = session.scalars(select(FeeEntry)
+            .where(FeeEntry.member_id == member.id)).all()
+        assert len(entries) == 1
+        assert entries[0].month == date(2024, 1, 1)
+        assert entries[0].fee == Decimal('23.00')
+        # the first transaction keeps the month
+        assert entries[0].tx_id == first_tx.tx_id
+
+        # a second run leaves the data unchanged
         analyze_member(member, today=date(2024, 1, 1), session=session)
         session.commit()
-        assert fee_entry_months(session, member) == {}
+        entries = session.scalars(select(FeeEntry)
+            .where(FeeEntry.member_id == member.id)).all()
+        assert len(entries) == 1
+        assert entries[0].tx_id == first_tx.tx_id
+        assert member.exit_date is None
 
 
 class TestNameMatching:
