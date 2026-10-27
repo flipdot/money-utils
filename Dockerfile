@@ -1,4 +1,4 @@
-# FROM python:3.11-alpine
+# FROM python:3.15-alpine
 # RUN --mount=type=cache,target=/var/cache/apk \
 # 	apk update && apk add python3-dev gcc libc-dev libffi-dev g++ \
 # RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
