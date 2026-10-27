@@ -6,6 +6,7 @@ import typing
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
+from sqlalchemy import select
 
 import db
 import util
@@ -32,8 +33,8 @@ def main(args, to=sys.stdout, months=12):
     start_month = end_month - relativedelta(months=months)
 
     with db.tx() as session:
-        members = session.query(Member) \
-            .order_by(Member.last_name, Member.first_name)
+        members = session.scalars(select(Member)
+            .order_by(Member.last_name, Member.first_name))
         members_table(session, members, start_month, end_month, to)
 
 
@@ -54,9 +55,9 @@ def members_table(session, members, start_month, end_month, to: typing.TextIO=sy
         to.write('{:2} '.format(member.id))
         to.write('{:>20.20} | '.format(member.name))
         for month, next_month in months:
-            fees = session.query(FeeEntry)\
-                .filter(FeeEntry.member_id == member.id)\
-                .filter(FeeEntry.month == month).all()
+            fees = session.scalars(select(FeeEntry)
+                .where(FeeEntry.member_id == member.id)
+                .where(FeeEntry.month == month)).all()
             if len(fees) == 0:
                 to.write('     ')
             else:

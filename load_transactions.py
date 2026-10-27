@@ -7,8 +7,8 @@ from datetime import date, timedelta, datetime
 
 from fints.client import NeedTANResponse
 from fints.hhd.flicker import terminal_flicker_unix
-from sqlalchemy import desc
-from sqlalchemy.orm.session import Session
+from sqlalchemy import desc, select
+from sqlalchemy.orm import Session
 
 import config
 import db
@@ -36,9 +36,8 @@ def main(args):
 
 def get_transactions(force=False, tan_callback=hbci_client.terminal_tan_callback):
     with db.tx() as session:
-        last_load: Status = session.query(Status)\
-            .filter_by(key=LAST_LOAD)\
-            .first()
+        last_load: Status = session.scalar(select(Status)
+            .where(Status.key == LAST_LOAD))
         if last_load:
             logging.info("Last load was at %s", last_load.value_dt)
             if not force and last_load.value_dt + load_interval_max > datetime.utcnow():
@@ -52,13 +51,13 @@ def get_transactions(force=False, tan_callback=hbci_client.terminal_tan_callback
 
 
 def _query_transactions(session):
-    return session.query(Transaction)
+    return select(Transaction)
 
 
 def load_transactions(session, last_load: Status, tan_callback):
 
-    last_transaction: Transaction = _query_transactions(session)\
-        .order_by(desc(Transaction.entry_date))\
+    last_transaction: Transaction = session.scalars(_query_transactions(session)\
+        .order_by(desc(Transaction.entry_date)))\
         .first()
 
     utcnow = datetime.utcnow()

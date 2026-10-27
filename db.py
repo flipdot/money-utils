@@ -3,8 +3,7 @@ from contextlib import contextmanager
 from typing import Iterator
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker, scoped_session
+from sqlalchemy.orm import Session, declarative_base, scoped_session, sessionmaker
 
 import config
 
@@ -35,10 +34,8 @@ def init(debug=False):
     if conn: return conn
     conn = create_engine('sqlite:///%s' % config.db_path)
     session_maker = scoped_session(sessionmaker(
-            autocommit=False,
             autoflush=True,
             bind=conn))
-    Base.query = session_maker.query_property()
 
     if debug:
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
