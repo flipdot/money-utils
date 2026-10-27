@@ -30,3 +30,14 @@ except ModuleNotFoundError:
 # plain SQLAlchemy tests create their own in-memory engines; this only
 # protects against accidental use.
 config.db_path = os.path.join(tempfile.gettempdir(), "money-utils-tests.sqlite")
+
+# pytest-django normally initializes Django in its preparse hook, which runs
+# before this conftest is imported, so webreport.settings would fail on the
+# machine-local ``config`` import before the fallback above can take effect.
+# The ini options (no DJANGO_SETTINGS_MODULE, django_find_project = false)
+# defer that initialization, which we do here, once config is importable and
+# db_path is redirected.
+os.environ["DJANGO_SETTINGS_MODULE"] = "webreport.settings"
+import django  # noqa: E402
+
+django.setup()
