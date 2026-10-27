@@ -47,3 +47,39 @@ class MembersPerMonthViewTest(TestCase):
         # month factors of the middle months.
         self.assertIn('2024-02', content)
         self.assertIn('2024-03', content)
+
+
+class MembersPerMonthSparseDataTest(TestCase):
+    """The view slices the first and last month off (df.iloc[1:-1]), so
+    fewer than three months of FeeEntry rows leave nothing to plot. A fresh
+    installation has no rows at all and must render, not 500."""
+
+    def _create_month(self, member, month):
+        tx = Transaction.objects.create(
+            date=month,
+            amount=Decimal('10.00'),
+            purpose=f'membership fee {month:%Y-%m}',
+        )
+        FeeEntry.objects.create(
+            member=member,
+            month=month,
+            tx=tx,
+            fee=Decimal('2.50'),
+            pay_interval=PayInterval.MONTHLY,
+        )
+
+    def test_view_renders_without_fee_entries(self):
+        response = self.client.get(reverse('report:members_per_month'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_renders_with_two_months(self):
+        member = Member.objects.create(
+            first_name='Test',
+            last_name='Person',
+            nick='tester',
+            pay_interval=PayInterval.MONTHLY,
+        )
+        self._create_month(member, date(2024, 1, 15))
+        self._create_month(member, date(2024, 2, 15))
+        response = self.client.get(reverse('report:members_per_month'))
+        self.assertEqual(response.status_code, 200)
