@@ -75,6 +75,10 @@ def drinks_transactions():
 
 
 def members_per_month(request: HttpRequest):
+    if not FeeEntry.objects.exists():
+        return render(request, 'graph.html', {
+            'html': mark_safe('<p>Noch keine Monatsdaten vorhanden.</p>'),
+        })
     members_per_month = FeeEntry.objects.values('month').order_by('month')\
         .annotate(count=Count('month'))
     df_members = pandas.DataFrame.from_dict(members_per_month)
