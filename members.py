@@ -11,10 +11,9 @@ from typing import Dict, List, Tuple
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import MONTHLY, rrule
 from fuzzywuzzy import fuzz
-from sqlalchemy import or_
+from sqlalchemy import Select, delete, or_, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Query
-from sqlalchemy.orm.session import Session
+from sqlalchemy.orm import Session
 
 import config
 import db
@@ -36,8 +35,8 @@ def main(args):
     logging.info("Analyzing Member fees...")
 
     with db.tx() as session:
-        members = session.query(Member) \
-            .order_by(Member.last_name, Member.first_name)
+        members = session.scalars(select(Member)
+            .order_by(Member.last_name, Member.first_name))
         link_transactions(session, members)
 
     # only use the current month if we are  past the 18th, instead use the last
@@ -46,12 +45,12 @@ def main(args):
     logging.info("Analyzing until %s", today)
 
     with db.tx() as session:
-        member_ids = session.query(Member.id) \
-            .order_by(Member.last_name, Member.first_name)\
+        member_ids = session.scalars(select(Member.id)
+            .order_by(Member.last_name, Member.first_name)) \
             .all()
     for id in member_ids:
         with db.tx() as session:
-            analyze_member(session.query(Member).get(id), today, session)
+            analyze_member(session.get(Member, id), today, session)
 
     logging.info("Analyzing finished.")
     #TODO check whether tx entries in fee_entry match up with fee sum
@@ -84,25 +83,25 @@ def like_name_patterns(member, glob="%"):
         yield glob + last + glob + first + glob
 
 
-def txs_by_member(session: Session, member: Member) -> Query:
+def txs_by_member(member: Member) -> Select:
     or_items = [
         Transaction.applicant_name.ilike(p) for p in like_name_patterns(member)
     ] + [
         Transaction.purpose.ilike(p) for p in like_name_patterns(member)
     ]
 
-    return session.query(Transaction)\
-        .filter(or_(*or_items))\
-        .filter(Transaction.purpose.notilike("%spende")) \
-        .filter(Transaction.purpose.notilike("%spende %")) \
-        .filter(Transaction.purpose.notilike("spende %")) \
-        .filter(Transaction.purpose.notilike("spende")) \
-        .filter(Transaction.purpose.notilike("drinks %")) \
-        .filter(Transaction.purpose.notilike("%Getraenke")) \
-        .filter(Transaction.purpose.notilike("%Einkauf%")) \
-        .filter(Transaction.purpose.notilike("Baegeldeinzahlung%")) \
-        .filter(or_(Transaction.type == TxType.MEMBER_FEE, Transaction.type.is_(None)))\
-        .filter(Transaction.amount > 0)
+    return select(Transaction)\
+        .where(or_(*or_items))\
+        .where(Transaction.purpose.notilike("%spende")) \
+        .where(Transaction.purpose.notilike("%spende %")) \
+        .where(Transaction.purpose.notilike("spende %")) \
+        .where(Transaction.purpose.notilike("spende")) \
+        .where(Transaction.purpose.notilike("drinks %")) \
+        .where(Transaction.purpose.notilike("%Getraenke")) \
+        .where(Transaction.purpose.notilike("%Einkauf%")) \
+        .where(Transaction.purpose.notilike("Baegeldeinzahlung%")) \
+        .where(or_(Transaction.type == TxType.MEMBER_FEE, Transaction.type.is_(None)))\
+        .where(Transaction.amount > 0)
 
 
 def choose_member(tx: Transaction, members: List[Member]):
@@ -131,8 +130,8 @@ def link_transactions(session, members):
     tx_map: Dict[str, Transaction] = {}
 
     for member in members:
-        member_txs: List[Transaction] = txs_by_member(session, member)\
-            .filter(Transaction.member_id.is_(None)).all()
+        member_txs: List[Transaction] = session.scalars(txs_by_member(member) \
+            .where(Transaction.member_id.is_(None))).all()
         for tx in member_txs:
             member_tx_set[tx.tx_id].add(member)
         tx_map.update({tx.tx_id: tx for tx in member_txs})
@@ -173,9 +172,9 @@ def analyze_member(member, today, session):
         (" last amount %.2f" % member.last_fee if member.last_fee else "") +
         (" interval %s" % member.pay_interval.value if member.pay_interval else ""))
 
-    all_txs = session.query(Transaction)\
-        .filter(Transaction.member_id == member.id) \
-        .filter(Transaction.type == TxType.MEMBER_FEE)\
+    all_txs = select(Transaction)\
+        .where(Transaction.member_id == member.id) \
+        .where(Transaction.type == TxType.MEMBER_FEE)\
         .order_by(Transaction.date)
 
     analyze_fees(member=member, today=today, session=session, all_txs=all_txs)
@@ -186,11 +185,11 @@ def analyze_member(member, today, session):
     for first_day, next_month in util.months(from_date, today):
         month = first_day.strftime("%Y-%m")
 
-        txs = session.query(Transaction)\
+        txs = session.scalars(select(Transaction)\
             .join(FeeEntry, Transaction.tx_id == FeeEntry.tx_id)\
-            .filter(Transaction.member == member)\
-            .filter(FeeEntry.month == first_day)\
-            .all()
+            .where(Transaction.member == member)\
+            .where(FeeEntry.month == first_day)
+            ).all()
 
         month_sum = sum([tx.amount for tx in txs])
 
@@ -226,11 +225,11 @@ def analyze_member(member, today, session):
         session.add(member)
 
 
-def analyze_fees(member, today, session: Session, all_txs: Query):
-    txs_without_entry: List[Transaction] = all_txs \
-        .outerjoin(FeeEntry, FeeEntry.tx_id == Transaction.tx_id) \
-        .filter(FeeEntry.member_id.is_(None))\
-        .all()
+def analyze_fees(member, today, session: Session, all_txs: Select):
+    txs_without_entry: List[Transaction] = session.scalars(all_txs \
+        .join(FeeEntry, FeeEntry.tx_id == Transaction.tx_id, isouter=True) \
+        .where(FeeEntry.member_id.is_(None))
+        ).all()
     logging.info("    Creating fee entries for %d new txs", len(txs_without_entry))
 
     for tx in txs_without_entry:
@@ -243,10 +242,15 @@ def analyze_fees(member, today, session: Session, all_txs: Query):
             session.rollback()
             logging.warning("Entries colliding! %s:", entries)
             logging.info("  Why: %s", e)
-            delete_entries = session.query(FeeEntry).filter_by(member_id=member.id)\
-                .filter(FeeEntry.month.in_([entry.month for entry in entries]))
-            logging.warning("Deleting these: %s", delete_entries.all())
-            delete_entries.delete(synchronize_session='fetch')
+            months = [entry.month for entry in entries]
+            delete_entries = session.scalars(select(FeeEntry)
+                .where(FeeEntry.member_id == member.id)
+                .where(FeeEntry.month.in_(months))).all()
+            logging.warning("Deleting these: %s", delete_entries)
+            session.execute(delete(FeeEntry)
+                .where(FeeEntry.member_id == member.id)
+                .where(FeeEntry.month.in_(months))
+                .execution_options(synchronize_session='fetch'))
 
 
 def split_into_entries(member, session, tx):
@@ -365,9 +369,9 @@ def fee_changed(session, member, month_sum, month, txs):
 def find_first_date(member, session: Session):
     if member.entry_date:
         return member.entry_date
-    first_tx: Transaction = session.query(Transaction)\
-        .filter(Transaction.member_id == member.id)\
-        .order_by(Transaction.date).first()
+    first_tx: Transaction = session.scalars(select(Transaction)\
+        .where(Transaction.member_id == member.id)\
+        .order_by(Transaction.date)).first()
     if not first_tx:
         logging.error("  No transactions for %s", member.name)
         return None

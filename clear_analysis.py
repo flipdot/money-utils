@@ -1,6 +1,8 @@
 import logging
 import sys
 
+from sqlalchemy import update
+
 import db
 from schema.transaction import Transaction
 import config
@@ -16,8 +18,8 @@ def main(args):
     db.init()
 
     with db.tx() as session:
-        session.query(Transaction)\
-            .update({'member_id': None, 'type': None})
+        session.execute(update(Transaction).values(
+            member_id=None, type=None))
 
 
 if __name__ == "__main__":
