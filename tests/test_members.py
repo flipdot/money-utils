@@ -224,18 +224,15 @@ class TestNameMatching:
             ('Miete max', None, '10.00', True),
             ('Spende max', None, '10.00', False),        # donations are not fees
             ('spende für max', None, '10.00', False),
+            ('xyz spende abc', None, '10.00', False),    # keyword in the middle
             ('drinks 123 max', None, '10.00', False),    # drink recharges
+            ('drink 123 max', None, '10.00', False),     # singular form
+            ('Getraenke max', None, '10.00', False),
             ('Einkauf getraenke max', None, '10.00', False),
             ('Baegeldeinzahlung max', None, '10.00', False),
-            ('Getraenke max', None, '10.00', True),
             ('Miete max', TxType.PROJECT_EXPENSE, '10.00', False),
             ('Miete max', None, '-10.00', False),        # refunds
         ]
-        # KNOWN GAP (issue #112): the exclusions are position-dependent LIKE
-        # patterns, so "Getraenke" only matches at the END of the purpose. A
-        # drink purchase whose purpose continues with the member's name
-        # ("Getraenke max") is still linked as a fee. Same holds for
-        # "spende" in the middle of a purpose ("xyz spende abc").
         txs = []
         for purpose, type_, amount, _ in cases:
             tx = add_fee_tx(session, member, date(2024, 1, 1), amount,
@@ -247,5 +244,4 @@ class TestNameMatching:
 
         linked = session.scalars(
             txs_by_member(member).where(Transaction.member_id.is_(None))).all()
-        assert {t.purpose for t in linked} == {
-            'Miete max', 'Getraenke max'}
+        assert [t.purpose for t in linked] == ['Miete max']
