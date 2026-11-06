@@ -331,7 +331,8 @@ def month_command_ymd(text):
     matches = list(month_regex_ym.finditer(text))
     if matches:
         for match in matches:
-            yield date(2000 + int(match.group('year')), int(match.group('month')), 1)
+            # the regex already requires a 4-digit year
+            yield date(int(match.group('year')), int(match.group('month')), 1)
         return
     month_names_or = "|".join(util.months_german.keys())
     matches = list(re.finditer(r'(?:^|\s)(?P<month>%s) ?(?P<year>\d{4})(?=$|\s)' % month_names_or, text))
