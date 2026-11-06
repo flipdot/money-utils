@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import MONTHLY, rrule
 from fuzzywuzzy import fuzz
-from sqlalchemy import Select, delete, or_, select
+from sqlalchemy import Select, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -240,17 +240,24 @@ def analyze_fees(member, today, session: Session, all_txs: Select):
             session.commit()
         except IntegrityError as e:
             session.rollback()
-            logging.warning("Entries colliding! %s:", entries)
             logging.info("  Why: %s", e)
             months = [entry.month for entry in entries]
-            delete_entries = session.scalars(select(FeeEntry)
+            for entry in entries:
+                # the failed commit may have already detached the entries
+                if entry in session:
+                    session.expunge(entry)
+            existing = session.scalars(select(FeeEntry)
                 .where(FeeEntry.member_id == member.id)
                 .where(FeeEntry.month.in_(months))).all()
-            logging.warning("Deleting these: %s", delete_entries)
-            session.execute(delete(FeeEntry)
-                .where(FeeEntry.member_id == member.id)
-                .where(FeeEntry.month.in_(months))
-                .execution_options(synchronize_session='fetch'))
+            # The month already has a fee entry from another transaction and
+            # the (member, month) uniqueness constraint allows only one. Keep
+            # the existing entry and leave this transaction without one. The
+            # transaction stays unassigned, so this repeats on every run: it
+            # is a duplicate payment for the same month that needs a human
+            # to look at both transactions.
+            logging.warning(
+                "Keeping existing fee entries for %s; %s is left without an "
+                "entry. Existing: %s", months, tx, existing)
 
 
 def split_into_entries(member, session, tx):
