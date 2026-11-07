@@ -24,6 +24,8 @@ jobs:
     name: Build
     uses: dargmuesli/github-actions/.github/workflows/docker.yml@a6f1094d5440ad0158a4c6f10d1c43109a4c983b # 5.9.12
     permissions:
+      attestations: write
+      id-token: write
       packages: write
     with:
       PUSH: false
