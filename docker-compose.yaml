@@ -10,3 +10,8 @@ services:
       - ./data.docker:/app/data
       - ./config.py:/app/config.py:ro
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
