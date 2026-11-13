@@ -43,13 +43,9 @@ class TestMonthCommandYmd:
         # "2024-02-10" is a date, not a month: it must not match.
         assert list(month_command_ymd('Miete 2024-02-10')) == []
 
-    def test_ym_pattern_parses_year_as_2000_plus_four_digits(self):
-        # KNOWN BUG (issue #111): the "MM/YYYY" branch captures a 4-digit
-        # year and adds 2000 to it, so "03/2024" parses as the year 4024.
-        # month_command then rejects it as out of range, i.e. slash-form
-        # month commands in purposes are silently ignored. Pin the current
-        # behavior.
-        assert list(month_command_ymd('Beitrag 03/2024')) == [date(4024, 3, 1)]
+    def test_ym_pattern_parses_year_as_written(self):
+        # "MM/YYYY" uses the 4-digit year as written (issue #111).
+        assert list(month_command_ymd('Beitrag 03/2024')) == [date(2024, 3, 1)]
 
     def test_german_month_name(self):
         assert list(month_command_ymd('Miete Januar 2024')) == [date(2024, 1, 1)]
@@ -75,11 +71,9 @@ class TestMonthCommand:
         # more than 2 years after the tx date: must be ignored
         assert month_command(tx('Beitrag 2026-06', date(2024, 1, 1))) is None
 
-    def test_ym_pattern_is_rejected_as_out_of_range(self):
-        # See test_ym_pattern_parses_year_as_2000_plus_four_digits (issue
-        # #111): the broken year math means slash-form commands never
-        # produce a plausible month.
-        assert month_command(tx('Beitrag 03/2024', date(2024, 1, 1))) is None
+    def test_ym_pattern_is_accepted_in_range(self):
+        assert month_command(tx('Beitrag 03/2024', date(2024, 1, 1))) == \
+            [date(2024, 3, 1)]
 
     def test_far_past_is_rejected(self):
         # more than 1 year before the tx date: must be ignored
