@@ -131,6 +131,19 @@ class TestAnalyzeMember:
         assert all(e.fee == Decimal('10.00') for e in entries)
         assert all(e.detect_method == DetectMethod.FEE_COMMAND for e in entries)
 
+    def test_ym_month_command_is_split_for_that_month(self, session):
+        # "MM/YYYY" month commands in purposes (issue #111)
+        member = make_member(session, entry_date=date(2024, 1, 1))
+        add_fee_tx(session, member, date(2024, 1, 5), '23.00',
+                   purpose='Miete 03/2024')
+        session.flush()
+
+        analyze_member(member, today=date(2024, 3, 1), session=session)
+        session.commit()
+
+        assert fee_entry_months(session, member) == {
+            date(2024, 3, 1): Decimal('23.00')}
+
     def test_payment_after_crossover_counts_for_next_month(self, session):
         # config.crossover_days = 10: a payment on the 29th is next month's
         member = make_member(session, entry_date=date(2024, 1, 1))
